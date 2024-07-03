@@ -1,5 +1,7 @@
 #!/usr/bin/python2.7
 """Example: A Simple class to get & read SoundDetected Events"""
+import logging
+
 import qi
 #importing dialogs for the conversation with the robot
 #import resources.dialogs as dialogs
@@ -81,7 +83,7 @@ class Sound_Detector(object):
         """
         Loop on, wait for events until manual interruption.
         """
-        print "Starting Sound Detector"
+        print(\1)
 
         while self.go_on == True:
             time.sleep(0.5)

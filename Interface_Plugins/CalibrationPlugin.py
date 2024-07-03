@@ -2,7 +2,7 @@
 import threading
 import os
 import sys
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 ab_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../Interface_Plugins'))
 sys.path.append(ab_path)
 from statistics import mean

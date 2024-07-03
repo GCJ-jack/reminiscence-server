@@ -4,7 +4,7 @@ import threading
 import os, sys
 ab_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../Interface_Plugins'))
 sys.path.append(ab_path)
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 import time
 
 #import Middle_layer.SpeechRobot as Robot
@@ -20,244 +20,228 @@ import datetime
 
 class TherapyPlugin(object):
 
-	def __init__(self, settings = 'Images/Photo_1.jpeg', DataHandler = None, path = None):
+    def __init__(self, settings = 'Images/Photo_1.jpeg', DataHandler = None, path = None):
 
-		#Loading interface settings
-		self.settings = settings
-		#print('Setting from TherapyPlugin', self.settings)
+        #Loading interface settings
+        self.settings = settings
+        #print('Setting from TherapyPlugin', self.settings)
 
-		self.path = path
-		print('Path from therapy', self.path)
+        self.path = path
+        print('Path from therapy', self.path)
 
-		self.useRobot = True
+        self.useRobot = True
 
-		#Load database manager
+        #Load database manager
 
-		self.DB = DataHandler
+        self.DB = DataHandler
 
-		self.date = datetime.datetime.now()
+        self.date = datetime.datetime.now()
 
-		self.validation = None
+        self.validation = None
 
-		self.onSart_count = 0
+        self.onSart_count = 0
 
-		
+        
 
-		#Loading libraries for TherapyPlugin
+        #Loading libraries for TherapyPlugin
 
-		self.Lowerlevel = Lowerlevel.LowerLevel(Datahandler = self.DB)
-		self.Robot = Robot.Robot(db = self.DB)
-		#self.Avatar = Avatar.Avatar_Speech(Datahandler = self.DB)
-		self.VE = VE.Visual_EngagementTracker(DataHandler = self.DB, window = "Therapy")
-		self.ReminiscenceWindow = ReminiscenceWindow.ReminiscenceWindow(settings = self.settings)
+        self.Lowerlevel = Lowerlevel.LowerLevel(Datahandler = self.DB)
+        self.Robot = Robot.Robot(db = self.DB)
+        #self.Avatar = Avatar.Avatar_Speech(Datahandler = self.DB)
+        self.VE = VE.Visual_EngagementTracker(DataHandler = self.DB, window = "Therapy")
+        self.ReminiscenceWindow = ReminiscenceWindow.ReminiscenceWindow(settings = self.settings)
 
 
-		#Launching sensor and robot
+        #Launching sensor and robot
 
-		self.launch_sensors()
-		self.launch_robot()
-		self.launch_camera()
-	
-	def launch_view(self):
+        self.launch_sensors()
+        self.launch_robot()
+        self.launch_camera()
+    
+    def launch_view(self):
 
-		#self.image_processing()
+        #self.image_processing()
 
-		self.ReminiscenceWindow.show()
-		
-		self.set_signals()
+        self.ReminiscenceWindow.show()
+        
+        self.set_signals()
 
-	def set_signals(self):
+    def set_signals(self):
 
-		#self.image_validation()
+        #self.image_validation()
 
 
-		# Opening the data from calibration process
+        # Opening the data from calibration process
 
-		calibration_values = self.calibration_data()
-		self.VE.set_thresholds(ey = calibration_values[0], hp = calibration_values[1])
+        calibration_values = self.calibration_data()
+        self.VE.set_thresholds(ey = calibration_values[0], hp = calibration_values[1])
 
 
-		#  Avatar Interaction signals
-		self.ReminiscenceWindow.playButton(self.Robot.welcome_sentence)
-		self.ReminiscenceWindow.playButton(self.SensorCaptureThread.start)
-		self.ReminiscenceWindow.playButton(self.CameraCaptureThread.start)
-		#self.ReminiscenceWindow.playButton(self.AvatarGraphicsThread.start)
-		self.ReminiscenceWindow.closeButton(self.onShutdown)
+        #  Avatar Interaction signals
+        self.ReminiscenceWindow.playButton(self.Robot.welcome_sentence)
+        self.ReminiscenceWindow.playButton(self.SensorCaptureThread.start)
+        self.ReminiscenceWindow.playButton(self.CameraCaptureThread.start)
+        #self.ReminiscenceWindow.playButton(self.AvatarGraphicsThread.start)
+        self.ReminiscenceWindow.closeButton(self.onShutdown)
 
 
-		# Internal Signals
-		self.ReminiscenceWindow.onUpload(self.image_validation)
-		self.ReminiscenceWindow.onPhoto.connect(self.comment_photos)
+        # Internal Signals
+        self.ReminiscenceWindow.onUpload(self.image_validation)
+        self.ReminiscenceWindow.onPhoto.connect(self.comment_photos)
 
-		#self.ReminiscenceWindow.onUpload(self.onStart)
-		
-		# Lower level signals
-		self.ReminiscenceWindow.set_pathPhoto1(lambda:self.onStart(n=1))
-		self.ReminiscenceWindow.set_pathPhoto2(lambda:self.onStart(n=2))
-		#self.ReminiscenceWindow.set_pathPhoto3(self.onStart)
-		#self.ReminiscenceWindow.set_pathPhoto4(self.onStart)
+        #self.ReminiscenceWindow.onUpload(self.onStart)
+        
+        # Lower level signals
+        self.ReminiscenceWindow.set_pathPhoto1(lambda:self.onStart(n=1))
+        self.ReminiscenceWindow.set_pathPhoto2(lambda:self.onStart(n=2))
+        #self.ReminiscenceWindow.set_pathPhoto3(self.onStart)
+        #self.ReminiscenceWindow.set_pathPhoto4(self.onStart)
 
 
-	def user_data(self, user):
+    def user_data(self, user):
 
-		self.user = user
+        self.user = user
 
 
-	def calibration_data(self):
+    def calibration_data(self):
 
-		f = open(self.path + "/" + "db"+ "/" + "general"+ "/" + str(self.user["id"]) +"/"+ str(self.date.year) +"-"+ str(self.date.month)+"-"+ str(self.date.day)+"/"+"Calibration.csv")
-		lines = f.readlines()
-		lines = lines[1].split(";")
-		self.eg_thresh = lines[0]
-		self.hp_thresh = lines[1]
+        f = open(self.path + "/" + "db"+ "/" + "general"+ "/" + str(self.user["id"]) +"/"+ str(self.date.year) +"-"+ str(self.date.month)+"-"+ str(self.date.day)+"/"+"Calibration.csv")
+        lines = f.readlines()
+        lines = lines[1].split(";")
+        self.eg_thresh = lines[0]
+        self.hp_thresh = lines[1]
 
-		return [self.eg_thresh, self.hp_thresh]
+        return [self.eg_thresh, self.hp_thresh]
 
 
 
-	def image_processing(self):
+    def image_processing(self):
 
 
-		# Available photos in Lower layer level
-		self.photos = os.listdir(self.settings)
-		# Photos name in the directory
-		photo1 = self.photos[0]
-		photo2 = self.photos[1]
-		#Setting paths in the Lower level 
-		self.Lowerlevel.set_path({'path1': self.settings +'/' + photo1, 'path2': self.settings +'/' + photo2})
-		self.Lowerlevel.set_modules(work = True, sound = True)
-		self.Lowerlevel.launch_wsmodule()
+        # Available photos in Lower layer level
+        self.photos = os.listdir(self.settings)
+        # Photos name in the directory
+        photo1 = self.photos[0]
+        photo2 = self.photos[1]
+        #Setting paths in the Lower level 
+        self.Lowerlevel.set_path({'path1': self.settings +'/' + photo1, 'path2': self.settings +'/' + photo2})
+        self.Lowerlevel.set_modules(work = True, sound = True)
+        self.Lowerlevel.launch_wsmodule()
 
-	def launch_sensors(self):
+    def launch_sensors(self):
 
-		self.SensorCaptureThread = SensorCaptureThread(interface = self)
+        self.SensorCaptureThread = SensorCaptureThread(interface = self)
 
-	def launch_robot(self):
+    def launch_robot(self):
 
-		#Launching the robot thread
-		self.RobotCaptureThread = RobotCaptureThread(interface = self)
+        #Launching the robot thread
+        self.RobotCaptureThread = RobotCaptureThread(interface = self)
 
-	def launch_camera(self):
+    def launch_camera(self):
 
-		#Launching the camera thread
+        #Launching the camera thread
 
-		self.VE.start()
-		self.CameraCaptureThread = CameraCaptureThread(interface = self)
+        self.VE.start()
+        self.CameraCaptureThread = CameraCaptureThread(interface = self)
 
-	def image_validation(self):
-		print('image_validation')
+    def image_validation(self):
+        print('image_validation')
 
-		self.validation = self.ReminiscenceWindow.validate_images()
+        self.validation = self.ReminiscenceWindow.validate_images()
 
-		print('Validatiooon', self.validation)
+        print('Validatiooon', self.validation)
 
-		if self.validation == False:
-			self.comment_photos()
-			#self.ReminiscenceWindow.onPhoto.emit()
-		#time.sleep(10)
+        if self.validation == False:
+            self.comment_photos()
+            #self.ReminiscenceWindow.onPhoto.emit()
+        #time.sleep(10)
 
 
-	def comment_photos(self):
+    def comment_photos(self):
 
-		print('Robot commenting')
+        print('Robot commenting')
 
-		self.Robot.image_validation(self.validation)
+        self.Robot.image_validation(self.validation)
 
 
 
-	def VE_data(self):
+    def VE_data(self):
 
-		VE_data = self.VE.get_calibration()
+        VE_data = self.VE.get_calibration()
 
 
 
 
-	def onStart(self, n):
+    def onStart(self, n):
 
-		img_id = n
+        img_id = n
 
-		print('Image ID from therapy', img_id)
-		self.onSart_count += 1
+        print('Image ID from therapy', img_id)
+        self.onSart_count += 1
 
-		#Launching Robot's SR module
-		self.Robot.launch_RobotSR()
-		
-		# Setting lower layer modules
+        #Launching Robot's SR module
+        self.Robot.launch_RobotSR()
+        
+        # Setting lower layer modules
 
 
-		self.ReminiscenceWindow.set_recognImage(img_id)
+        self.ReminiscenceWindow.set_recognImage(img_id)
 
-		self.Robot.commenting_photos(self.onSart_count)
-		
-		m = self.Lowerlevel.get_data(img_id)
+        self.Robot.commenting_photos(self.onSart_count)
+        
+        m = self.Lowerlevel.get_data(img_id)
 
-		#print('Data from Lower Level Images', m)
+        #print('Data from Lower Level Images', m)
 
-		self.DB.General.SM.loadSensor(recog_obj = m)
+        self.DB.General.SM.loadSensor(recog_obj = m)
 
 
-		time.sleep(5)
+        time.sleep(5)
 
-		self.Robot.conversation_topics(m)
-		self.Robot.coversation_beginning()
+        self.Robot.conversation_topics(m)
+        self.Robot.coversation_beginning()
 
-		self.RobotCaptureThread.start()
+        self.RobotCaptureThread.start()
 
 
-	def update_RobotGraphics(self):
+    def update_RobotGraphics(self):
 
-		#data = self.Lowerlevel.update_sounddata()
+        #data = self.Lowerlevel.update_sounddata()
 
-		self.ReminiscenceWindow.update_sound()
+        self.ReminiscenceWindow.update_sound()
 
 
 
-	def second_Photo(self):
+    def second_Photo(self):
 
-		self.ReminiscenceWindow.onPhoto2.emit()
-		self.RobotCaptureThread.c = 0
-		self.RobotCaptureThread.n = None
-		self.RobotCaptureThread.shutdown()
-		self.Robot.set_topicStatus()
-	
+        self.ReminiscenceWindow.onPhoto2.emit()
+        self.RobotCaptureThread.c = 0
+        self.RobotCaptureThread.n = None
+        self.RobotCaptureThread.shutdown()
+        self.Robot.set_topicStatus()
+    
 
 
 
-	def onShutdown(self):
-		print('Here shutdown')
+    def onShutdown(self):
+        print('Here shutdown')
 
 
 
-		time.sleep(5)
-		self.Robot.r.pause()
-		self.RobotCaptureThread.shutdown()
-		self.SensorCaptureThread.shutdown()
+        time.sleep(5)
+        self.Robot.r.pause()
+        self.RobotCaptureThread.shutdown()
+        self.SensorCaptureThread.shutdown()
 
-		path = self.path + "/" + "db"+ "/" + "general"+'/'+ self.user['id'] + '/'+ str(self.date.year) +"-"+ str(self.date.month)+"-"+ str(self.date.day)
-		self.Lowerlevel.write_audio(path)
-		self.Lowerlevel.close_sensors()
+        path = self.path + "/" + "db"+ "/" + "general"+'/'+ self.user['id'] + '/'+ str(self.date.year) +"-"+ str(self.date.month)+"-"+ str(self.date.day)
+        self.Lowerlevel.write_audio(path)
+        self.Lowerlevel.close_sensors()
 
-		self.ReminiscenceWindow.close()
+        self.ReminiscenceWindow.close()
 
-		time.sleep(1)
+        time.sleep(1)
 
-		sys.exit()
-		
-
-
-		
-
-
-
-
-
-
-
-
-
-
-
-
+        sys.exit()
 
 
 class RobotCaptureThread(QtCore.QThread):
@@ -287,100 +271,97 @@ class RobotCaptureThread(QtCore.QThread):
 
 
 
-        	if self.c == 0:
+            if self.c == 0:
 
 
-        		self.n = self.interface.Robot.sr_beginning()
-
-        		print('word from recognized', self.n)
+                self.n = self.interface.Robot.sr_beginning()
 
 
-        		if self.n == "yes":
-        			#print('Here, when says yes')
-        			self.interface.Robot.yes_beginning()
+                if self.n == "yes":
+                    #print('Here, when says yes')
+                    self.interface.Robot.yes_beginning()
+                    self.c = 1
 
-        			self.c = 1
 
+                elif self.n =='no':
+                    #print('Here')
+                    self.c = 2
 
-        		elif self.n =='no':
-        			#print('Here')
-        			self.c = 2
+                elif(self.n == "yes_dcatch"):
 
-        		elif(self.n == "yes_dcatch"):
+                    self.interface.Robot.set_wordRecognized()
 
-        			self.interface.Robot.set_wordRecognized()
+                    if self.cont_yesd > 1:
 
-        			if self.cont_yesd > 1:
+                        #print('yes_dcatch 2222')
+                        self.interface.Robot.bad_catching('yes')
+            
+                    self.cont_yesd += 1
+                    self.c = 0
+                        
 
-        				#print('yes_dcatch 2222')
-        				self.interface.Robot.bad_catching('yes')
-        	
-        			self.cont_yesd += 1
-        			self.c = 0
-        				
+                elif(self.n == "no_dcatch"):
 
-        		elif(self.n == "no_dcatch"):
+                    self.interface.Robot.set_wordRecognized()
 
-        			self.interface.Robot.set_wordRecognized()
+                    if self.cont_nod > 1:
+                        #print('no_dcatch 2222')
+                        self.interface.Robot.bad_catching('no')
 
-        			if self.cont_nod > 1:
-        				#print('no_dcatch 2222')
-        				self.interface.Robot.bad_catching('no')
-
-        			self.cont_nod +=1
-        			self.c = 0
+                    self.cont_nod +=1
+                    self.c = 0
 
 
 
-        		elif(self.n != "yes" and self.n != "no"):
+                elif(self.n != "yes" and self.n != "no"):
 
-        			print('Different word')
-        			self.interface.Robot.no_understanding()
-        			self.interface.Robot.set_wordRecognized()
-        			self.c = 0
+                    print('Different word')
+                    self.interface.Robot.no_understanding()
+                    self.interface.Robot.set_wordRecognized()
+                    self.c = 0
 
 
 
 
-        	if self.c == 1:
+            if self.c == 1:
 
-        		if (self.n == 'yes'):
+                if (self.n == 'yes'):
 
-        			#self.interface.Robot.r.pause()
-        			#d = self.interface.Robot.d.update_sound()
-        			d = self.interface.Lowerlevel.update_sounddata()
-        			print('data from lower level sound', d)
-        			#loading sound data in the interface
-        			self.interface.DB.General.SM.loadSensor(voice = d)
-        			#print('data from thread',d)
-        			self.interface.Robot.set_Dialog(d)
-        			
-        			topic = self.interface.Robot.topic_Status()
-        			print('Topic flag', topic)
-        			if topic == "End":
+                    #self.interface.Robot.r.pause()
+                    #d = self.interface.Robot.d.update_sound()
+                    d = self.interface.Lowerlevel.update_sounddata()
+                    print('data from lower level sound', d)
+                    #loading sound data in the interface
+                    self.interface.DB.General.SM.loadSensor(voice = d)
+                    #print('data from thread',d)
+                    self.interface.Robot.set_Dialog(d)
+                    
+                    topic = self.interface.Robot.topic_Status()
+                    print('Topic flag', topic)
+                    if topic == "End":
 
-        				if self.num_threads == 1:
-        					self.n = None
-        					self.c = 0
-        					self.interface.Robot.set_wordRecognized()
-        					self.interface.Robot.second_Photo()
-        					self.interface.second_Photo()
-        				elif self.num_threads ==2:
-        					self.interface.Robot.end_phrase()
-        					time.sleep(5)
-        					self.interface.onShutdown()
-        			time.sleep(self.Ts)
+                        if self.num_threads == 1:
+                            self.n = None
+                            self.c = 0
+                            self.interface.Robot.set_wordRecognized()
+                            self.interface.Robot.second_Photo()
+                            self.interface.second_Photo()
+                        elif self.num_threads ==2:
+                            self.interface.Robot.end_phrase()
+                            time.sleep(5)
+                            self.interface.onShutdown()
+                    time.sleep(self.Ts)
 
-        	if self. c == 2:
+            if self. c == 2:
 
-        		#self.interface.Robot.r.pause()
-        		self.interface.Robot.no_beginning()
+                #self.interface.Robot.r.pause()
+                self.interface.Robot.no_beginning()
 
-        		self.ON = False
+                self.ON = False
 
-        		time.sleep(1)
+                time.sleep(1)
 
-        		self.interface.onShutdown()
+                self.interface.onShutdown()
 
 
            
@@ -389,7 +370,7 @@ class RobotCaptureThread(QtCore.QThread):
             
                 
     def shutdown(self):
-    	print('shutdown')
+        print('shutdown')
         self.ON = False
 
 
@@ -405,8 +386,8 @@ class SensorCaptureThread(QtCore.QThread):
         
      def run(self):
 
-     	#self.interface.Robot.d.launch_thread()
-     	self.interface.Lowerlevel.launch_sensors()
+         #self.interface.Robot.d.launch_thread()
+         self.interface.Lowerlevel.launch_sensors()
 
      def shutdown(self):
         self.on = False
@@ -414,19 +395,19 @@ class SensorCaptureThread(QtCore.QThread):
 
 class CameraCaptureThread(QtCore.QThread):
 
-	def __init__(self, parent = None, sample = 0.01, interface = None):
-		super(CameraCaptureThread, self).__init__()
-		self.on = False
-		self.interface = interface
+    def __init__(self, parent = None, sample = 0.01, interface = None):
+        super(CameraCaptureThread, self).__init__()
+        self.on = False
+        self.interface = interface
 
-	def run(self):
+    def run(self):
 
 
-		self.interface.VE.launch_thread()
+        self.interface.VE.launch_thread()
 
-	def shutdown(self):
+    def shutdown(self):
 
-		self.on = False
+        self.on = False
 
 
 
@@ -439,17 +420,17 @@ class CameraCaptureThread(QtCore.QThread):
 
 
 
-		
+        
 
 '''
 def main():
 
-	app = QtGui.QApplication(sys.argv)
-	rem = TherapyPlugin()
-	rem.launch_view()
-	#rem.buttons_menu()
-	#rem.reminisce_start()
-	sys.exit(app.exec_())
+    app = QtGui.QApplication(sys.argv)
+    rem = TherapyPlugin()
+    rem.launch_view()
+    #rem.buttons_menu()
+    #rem.reminisce_start()
+    sys.exit(app.exec_())
 
 A = main()
 '''

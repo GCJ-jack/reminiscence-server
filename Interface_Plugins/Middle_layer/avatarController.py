@@ -20,5 +20,5 @@ class avatarController(object):
 		self.avatar = SpeechAvatar.SpeechAvatar()
 
 		self.avatar.welcome_sentence()
-		self.
+
 

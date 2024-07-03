@@ -95,7 +95,6 @@ class SpeechRecognizer(object):
         """
         Loop on, wait for events until manual interruption.
         """
-        print "Starting Speech Recognized"
 
         while self.go_on:
 
@@ -105,7 +104,7 @@ class SpeechRecognizer(object):
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            print "Interrupted by user, stopping SpeechRecognizer"
+            print(\1)
             self.asr.pause(False)
             self.asr.unsubscribe("SpeechRecognizer")
             #stop

@@ -22,37 +22,33 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-
 from array import array
 from struct import pack
 import wave
 import time
 
 
+# ------ Steve Cox
 
-#------ Steve Cox
-
-#-------------------------- 
+# --------------------------
 
 
 class Sound_Detection(object):
 
-
-    def __init__(self, Datahandler = None):
-
+    def __init__(self, Datahandler=None):
 
         self.filename = "Voice_record.wav"
         self.vad_excel = "Voice_activity.cvs"
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
         self.RATE = 48000
-        self.CHUNK_DURATION_MS = 30       # supports 10, 20 and 30 (ms)
-        self.PADDING_DURATION_MS = 1500   # 1 sec jugement
+        self.CHUNK_DURATION_MS = 30  # supports 10, 20 and 30 (ms)
+        self.PADDING_DURATION_MS = 1500  # 1 sec jugement
         self.CHUNK_SIZE = int(self.RATE * self.CHUNK_DURATION_MS / 1000)  # chunk to read
         self.CHUNK_BYTES = self.CHUNK_SIZE * 2  # 16bit = 2 bytes, PCM
         self.NUM_PADDING_CHUNKS = int(self.PADDING_DURATION_MS / self.CHUNK_DURATION_MS)
 
-        #--- Steve Cox
+        # --- Steve Cox
         self.NUM_WINDOW_CHUNKS = int(240 / self.CHUNK_DURATION_MS)
         self.NUM_WINDOW_CHUNKS = int(400 / self.CHUNK_DURATION_MS)  # 400 ms/ 30ms  ge
 
@@ -62,38 +58,34 @@ class Sound_Detection(object):
         self.vad = webrtcvad.Vad(2)
         self.freq = 48000
 
-
-        #raw data variable
+        # raw data variable
         self.data = []
-        #array to detect silence and no silence
+        # array to detect silence and no silence
         self.voice_activity = []
         self.chunk = []
         self.active = None
 
-
         self.pa = pyaudio.PyAudio()
         self.streaming_objects()
 
-
         self.got_a_sentence = False
-
 
     def streaming_objects(self):
 
         self.stream = self.pa.open(format=self.FORMAT,
-                 channels=self.CHANNELS,
-                 rate=self.RATE,
-                 input=True,
-                 start=False,
-                 # input_device_index=2,
-                 frames_per_buffer=self.CHUNK_SIZE)
+                                   channels=self.CHANNELS,
+                                   rate=self.RATE,
+                                   input=True,
+                                   start=False,
+                                   # input_device_index=2,
+                                   frames_per_buffer=self.CHUNK_SIZE)
 
-    def normalize(snd_data):
+    def normalize(self):
         "Average the volume out"
         MAXIMUM = 32767  # 16384
-        times = float(MAXIMUM) / max(abs(i) for i in snd_data)
+        times = float(MAXIMUM) / max(abs(i) for i in self)
         r = array('h')
-        for i in snd_data:
+        for i in self:
             r.append(int(i * times))
         return r
 
@@ -101,7 +93,7 @@ class Sound_Detection(object):
 
         while self.go_on:
 
-            ring_buffer = collections.deque(maxlen = self.NUM_PADDING_CHUNKS)
+            ring_buffer = collections.deque(maxlen=self.NUM_PADDING_CHUNKS)
             triggered = False
             voiced_frames = []
             ring_buffer_flags = [0] * self.NUM_WINDOW_CHUNKS
@@ -115,7 +107,7 @@ class Sound_Detection(object):
             index = 0
             start_point = 0
             StartTime = time.time()
-            #rint("* recording: ")
+            # rint("* recording: ")
             self.stream.start_stream()
 
             while not self.got_a_sentence:
@@ -129,32 +121,32 @@ class Sound_Detection(object):
 
                 self.active = self.vad.is_speech(self.chunk, self.RATE)
 
-                #sys.stdout.write('1' if self.active else '_')
+                # sys.stdout.write('1' if self.active else '_')
 
                 ring_buffer_flags_end[ring_buffer_index_end] = 1 if self.active else 0
                 ring_buffer_index_end += 1
                 ring_buffer_index_end %= self.NUM_WINDOW_CHUNKS_END
 
-                #print(triggered)
+                # print(triggered)
 
                 if not triggered:
-                    #print('Aqui')
+                    # print('Aqui')
                     ring_buffer.append(self.chunk)
                     self.num_voiced = sum(ring_buffer_flags)
                     if self.num_voiced > 0.8 * self.NUM_WINDOW_CHUNKS:
-                        #print('Aqui2')
+                        # print('Aqui2')
                         triggered = True
                         start_point = index - self.CHUNK_SIZE * 20  # start point
                         ring_buffer.clear()
                     # end point detection
 
                 else:
-                    #print('Aqui3')
+                    # print('Aqui3')
                     ring_buffer.append(self.chunk)
                     self.num_unvoiced = self.NUM_WINDOW_CHUNKS_END - sum(ring_buffer_flags_end)
 
                     if self.num_unvoiced > 0.90 * self.NUM_WINDOW_CHUNKS_END or TimeUse > 10:
-                        #print('Aqui4')
+                        # print('Aqui4')
                         triggered = False
                         self.got_a_sentence = True
 
@@ -175,16 +167,16 @@ class Sound_Detection(object):
 
         print('Hereeeee2222')
 
-        #time.sleep(5)
+        # time.sleep(5)
 
-        #self.pa.terminate()
+        # self.pa.terminate()
         print('Hereeeee3333')
 
-    def write_audio(self,path):
+    def write_audio(self, path):
 
         print('Writing Audio')
 
-        self.wf = wave.open(path +'/'+ self.filename, "wb")
+        self.wf = wave.open(path + '/' + self.filename, "wb")
         # set the channels
         self.wf.setnchannels(self.CHANNELS)
         # set the sample format
@@ -196,20 +188,20 @@ class Sound_Detection(object):
         # close the file
         self.wf.close()
 
-        #self.voice_acd = np.array(self.active)
-        #pd.DataFrame(self.voice_acd).to_csv(path + '/'+ self.vad_excel)
+        # self.voice_acd = np.array(self.active)
+        # pd.DataFrame(self.voice_acd).to_csv(path + '/'+ self.vad_excel)
 
     def getData(self):
 
-        return(self.active)
+        return (self.active)
 
     def getVoice(self):
 
-        return(self.chunk)
+        return (self.chunk)
 
     def launch_thread(self):
 
-        self.t = threading.Thread(target = self.process)
+        self.t = threading.Thread(target=self.process)
         self.t.start()
 
 
@@ -243,4 +235,3 @@ def main():
 A = main()
 
 '''
-

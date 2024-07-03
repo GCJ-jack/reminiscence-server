@@ -53,14 +53,14 @@ class SpeechRecognizer(object):
     	settings = "10.34.58.142"
     	port = 9559
 
-    	print settings
-    	print "tcp://" + settings + ":" + str(port)
+    	print(\1)
+    	print(\1)(port)
 
     	try:
     		self.session.connect("tcp://" + settings + ":" + str(port))
 
     	except RuntimeError:
-    		print "Can't connect to Naoqi at ip"
+    		print(\1)
 
     
     def on_words_tracked(self, value):
@@ -116,7 +116,7 @@ class SpeechRecognizer(object):
         """
         Loop on, wait for events until manual interruption.
         """
-        print "Starting Speech Recognized"
+        print(\1)
 
         while self.go_on == True:
         	time.sleep(0.1)

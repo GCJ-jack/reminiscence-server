@@ -12,7 +12,8 @@ class Object_Detection(object):
     def __init__(self, path = 'None'):
 
         self.photoPath = path
-        self.modelFile = "C:/Users/natha/Desktop/Reminiscence_Interface/Interface_Plugins/Lower_layer/Workspace_Understanding/Models/resnet50_coco_best_v2.1.0.h5"
+        self.modelFile = "C:/Users/natha/Desktop/Reminiscence_Interface/Interface_Plugins/Lower_layer" \
+                         "/Workspace_Understanding/Models/resnet50_coco_best_v2.1.0.h5 "
         self.execution_path = os.getcwd()
         # Detector Initialization
         self.detector = ObjectDetection()

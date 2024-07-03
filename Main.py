@@ -1,10 +1,10 @@
-
 import os, sys
+
 ab_path = os.path.abspath(os.path.join(os.path.dirname(__file__)))
-#print(ab_path)
+# print(ab_path)
 sys.path.append(ab_path)
-import threading 
-#import GUI elements
+import threading
+# import GUI elements
 import Interface_Plugins.Upper_layer.MenuWindow as MenuWindow
 import Interface_Plugins.Upper_layer.RegisterWindow as RegisterWindow
 import Interface_Plugins.Upper_layer.ReminiscenceWindow as ReminiscenceWindow
@@ -15,8 +15,7 @@ import Interface_Plugins.MenuPlugin as MenuPlugin
 import Interface_Plugins.RegisterPlugin as RegisterPlugin
 import Interface_Plugins.CalibrationPlugin as CalibrationPlugin
 
-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtGui, QtCore, QtWidgets
 
 import db.database as database
 
@@ -24,117 +23,94 @@ import time
 import sys
 import os
 
+
 class MainController(object):
 
-	def __init__(self):
+    def __init__(self):
+        # Running file path
+        self.dir = os.getcwd()
+        print(self.dir)
+        # Reminiscence Images Path
+        self.imgDir = self.dir + '/' + 'Interface_Plugins' + '/' + 'Lower_layer' + '/' + 'Workspace_Understanding' + '/' + 'Images'
+        self.database_path = self.dir + '/' + 'db' + '/' + 'general'
 
+        db = database.database(self.database_path)
 
-		#Running file path
-		self.dir = os.getcwd()
-		print(self.dir)
-		# Reminiscence Images Path
-		self.imgDir = self.dir + '/'+'Interface_Plugins' +'/'+ 'Lower_layer' + '/'+'Workspace_Understanding' + '/'+ 'Images'
-		self.database_path = self.dir + '/'+'db'+'/'+'general'
+        # loading interface windows
 
-		db = database.database(self.database_path)
+        self.MenuWindow = MenuWindow.MenuWindow()
 
-		# loading interface windows 
+        self.ReminiscenceWindow = ReminiscenceWindow.ReminiscenceWindow(settings=self.imgDir)
 
-		self.MenuWindow = MenuWindow.MenuWindow()
+        self.RegisterWindow = RegisterWindow.RegisterWindow()
 
-		self.ReminiscenceWindow = ReminiscenceWindow.ReminiscenceWindow(settings = self.imgDir)
+        self.CalibrationWindow = CalibrationWindow.CalibrationWindow()
 
-		self.RegisterWindow = RegisterWindow.RegisterWindow()
+        # loading interface plugins
 
-		self.CalibrationWindow = CalibrationWindow.CalibrationWindow()
+        self.MenuPlugin = MenuPlugin.MenuPlugin()
 
+        self.RegisterPlugin = RegisterPlugin.RegisterPlugin(DataHandler=db)
 
-		#loading interface plugins
+        self.TherapyPlugin = TherapyPlugin.TherapyPlugin(settings=self.imgDir, DataHandler=db, path=ab_path)
 
+        self.CalibrationPlugin = CalibrationPlugin.CalibrationPlugin(DataHandler=db)
 
+        self.set_signals()
 
-		self.MenuPlugin = MenuPlugin.MenuPlugin()
+    def set_signals(self):
+        self.TherapyPlugin.image_processing()
 
-		self.RegisterPlugin = RegisterPlugin.RegisterPlugin(DataHandler = db) 
+        self.MenuWindow.show()
 
-		self.TherapyPlugin = TherapyPlugin.TherapyPlugin(settings = self.imgDir, DataHandler = db, path = ab_path)
+        # Register Logics
 
+        self.MenuWindow.registerButton(self.RegisterWindow.show)
 
-		self.CalibrationPlugin = CalibrationPlugin.CalibrationPlugin(DataHandler = db)
+        self.RegisterWindow.registerReminiscence(self.onLaunch_Therapy)
 
-		self.set_signals()
+        self.RegisterWindow.registerReminiscence(self.MenuWindow.hideButton)
 
+        self.RegisterWindow.registerButton(self.register_User)
 
+        self.RegisterWindow.statisticsButton(self.CalibrationWindow.show)
 
-	def set_signals(self):
+        # MainMenu Logics
 
-		self.TherapyPlugin.image_processing()
+        self.MenuWindow.reminiscenceButton(self.onLaunch_Therapy)
 
-		self.MenuWindow.show()
+        self.MenuWindow.reminiscenceButton(self.MenuWindow.hideButton)
 
-		#Register Logics
+        # Calibration Logics
 
-		self.MenuWindow.registerButton(self.RegisterWindow.show)
+        self.CalibrationWindow.reminiscenceButton(self.onLaunch_Therapy)
+        self.CalibrationWindow.calibration(self.calibration)
+        self.CalibrationWindow.onCalibration_end.connect(self.CalibrationWindow.calibration_charging)
 
-		self.RegisterWindow.registerReminiscence(self.onLaunch_Therapy)
+    def calibration(self):
+        self.CalibrationPlugin.calibration()
+        self.CalibrationWindow.onCalibration_end.emit()
 
-		self.RegisterWindow.registerReminiscence(self.MenuWindow.hideButton)
+    def register_User(self):
+        m = self.RegisterWindow.get_patient_data()
 
-		self.RegisterWindow.registerButton(self.register_User)
+        self.RegisterPlugin.onDataReceived(m)
 
-		self.RegisterWindow.statisticsButton(self.CalibrationWindow.show)
+        self.TherapyPlugin.user_data(m)
 
-		
+    def onLaunch_Therapy(self):
+        print('onLaunch_Therapy')
 
+        self.TherapyPlugin.launch_view()
 
-
-		#MainMenu Logics
-
-		self.MenuWindow.reminiscenceButton(self.onLaunch_Therapy)
-
-		self.MenuWindow.reminiscenceButton(self.MenuWindow.hideButton)
-
-
-		# Calibration Logics
-
-
-		self.CalibrationWindow.reminiscenceButton(self.onLaunch_Therapy)
-		self.CalibrationWindow.calibration(self.calibration)
-		self.CalibrationWindow.onCalibration_end.connect(self.CalibrationWindow.calibration_charging)
-
-
-
-
-	def calibration(self):
-
-		self.CalibrationPlugin.calibration()
-		self.CalibrationWindow.onCalibration_end.emit()
-
-
-
-	def register_User(self):
-
-		m = self.RegisterWindow.get_patient_data()
-
-		self.RegisterPlugin.onDataReceived(m)
-
-		self.TherapyPlugin.user_data(m)
-
-
-	def onLaunch_Therapy(self):
-
-		print('onLaunch_Therapy')
-
-		self.TherapyPlugin.launch_view()
-
-		#pass
+    # pass
 
 
 def main():
+    app = QtGui.QApplication(sys.argv)
+    menu = MainController()
 
-	app = QtGui.QApplication(sys.argv)
-	menu = MainController()
-	sys.exit(app.exec_())
+    sys.exit(app.exec_())
 
 
-A = main()
+main()

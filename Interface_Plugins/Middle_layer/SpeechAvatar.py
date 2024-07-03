@@ -1,950 +1,821 @@
-#Speech engine for the Avatar 
-#Class to create the voice of the avatar 
+# Speech engine for the Avatar
+# Class to create the voice of the avatar
 import os, sys
+
 ab_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../Middle_layer'))
 sys.path.append(ab_path)
 
 import sys
 import pyttsx3
-import time 
+import time
 import threading
-import os 
+import os
 import resources.dialogs as dialogs
-#import Queue
-import speech_recognition as sr 
+# import Queue
+import speech_recognition as sr
+
 
 class Avatar_Speech(object):
 
-	def __init__(self, Datahandler = None):
+    def __init__(self, Datahandler=None):
 
+        # Configuring talk engine
 
-		#Configuring talk engine 
+        self.engine = pyttsx3.init()
 
-		self.engine = pyttsx3.init()
+        self.dialogs = dialogs.Dialogs()
 
-		self.dialogs = dialogs.Dialogs()
+        self.cont = 1
 
-		self.cont = 1
+        self.cont1 = 0
 
-		self.cont1 = 0
+        self.who = 0
 
-		self.who = 0
+        self.last_value = False
 
-		self.last_value = False
+        self.onVoice = False
 
-		self.onVoice = False
+        self.change = 0
 
-		self.change = 0
+        self.person_topic = 0
 
-		self.person_topic = 0
+        self.sound_data = []
 
-		self.sound_data = []
+        self.flag_topic = "Who"
 
-		self.flag_topic = "Who"
+        # self.q = queue.Queue()
 
-		#self.q = queue.Queue()
+        # self.tts_thread = TTSThread(self.q, interface = self)
 
-		#self.tts_thread = TTSThread(self.q, interface = self)
+        # Initializing recognizer
 
-		# Initializing recognizer
+        self.r = sr.Recognizer()
 
-		self.r = sr.Recognizer()
+        self.word_recognized = None
 
-		self.word_recognized = None
+        self.cc = 0
 
-		self.cc = 0
+        # Loading DB details
 
+        self.DB = Datahandler
 
-		# Loading DB details
+        self.flag = 2
 
-		self.DB = Datahandler
+        self.y = 0
 
-		self.flag = 2
+        self.voice_act = 0
 
-		self.y = 0
+        self.voice_deac = 0
 
-		self.voice_act = 0
+        self.set_properties()
 
-		self.voice_deac = 0
+    # self.get_properties()
 
+    def get_properties(self):
 
-		self.set_properties()
+        # Avatar rate
 
+        self.rate = self.engine.getProperty('rate')
+        print(self.rate)
 
+        # Avatar volume
 
-		#self.get_properties()
+        self.volume = self.engine.getProperty('volume')
 
+    def set_properties(self):
 
+        # Set Avatar rate
 
-	def get_properties(self):
+        self.engine.setProperty('rate', 200)
 
-		# Avatar rate
+        # Set Avatar volume
 
-		self.rate = self.engine.getProperty('rate')
-		print(self.rate)
+        self.engine.setProperty('volume', 1.0)
 
-		# Avatar volume 
+        # Avatar voice
 
-		self.volume = self.engine.getProperty('volume')
+        self.voices = self.engine.getProperty('voices')
 
+        self.engine.setProperty('voice', self.voices[1].id)
 
+    def Talk(self, phrase):
 
-		
+        print('Talkiiiiiiiing')
+        self.onVoice = True
+        self.engine.say(phrase)
+        self.engine.runAndWait()
 
+    def getVoice(self):
 
+        return (self.onVoice)
 
+    def TalkingInit(self, phrase):
 
-	def set_properties(self):
+        self.engine.say(phrase)
+        self.engine.runAndWait()
 
-		# Set Avatar rate
+    def welcome_sentence(self):
 
-		self.engine.setProperty('rate', 200)  
+        s = self.dialogs.welcome_sentence
+        self.Talk(s)
+        time.sleep(0.1)
 
-		# Set Avatar volume 
+        s = self.dialogs.welcome_sentence2
+        self.Talk(s)
+        time.sleep(0.1)
 
-		self.engine.setProperty('volume', 1.0)
+        s = self.dialogs.welcome_sentence3
+        self.Talk(s)
+        time.sleep(0.1)
 
+        self.DB.General.SM.loadEvent(t="AvatarTalking", c="WelcomingSentence", v="True")
 
-		# Avatar voice 
+        # self.engine.stop()
 
-		self.voices = self.engine.getProperty('voices')
+        self.onVoice = False
 
-		self.engine.setProperty('voice', self.voices[1].id)
+    def image_validation(self, m):
 
+        if m == True:
+            s = self.dialogs.image_validationbad
+            self.Talk(s)
+            time.sleep(0.1)
+            s = self.dialogs.image_validationbad1
+            self.Talk("You want to continue?, or, You want to upload a new image?")
 
 
+        else:
+            s = self.dialogs.image_validationgreat
+            self.Talk(s)
+            time.sleep(0.1)
+            s = self.dialogs.image_validationgreat1
+            self.Talk(s)
+            time.sleep(0.1)
+            self.DB.General.SM.loadEvent(t="AvatarTalking", c="ImageValidation", v="True")
+            s = self.dialogs.choose_photo
+            self.Talk(s)
+            self.DB.General.SM.loadEvent(t="AvatarTalking", c="ImageSelection", v="True")
 
-	def Talk(self, phrase):
+        self.onVoice = False
 
+    def set_petrecognized(self, num_dog, num_cat):
 
-		print('Talkiiiiiiiing')
-		self.onVoice = True
-		self.engine.say(phrase)
-		self.engine.runAndWait()
+        print('dog', num_dog)
+        print('cat', num_cat)
 
+        if ((num_dog > 0) and (num_cat > 0)):
 
+            s = self.dialogs.get_petWho()
+            s = s.replace('XX', str(num_dog))
+            s = s.replace('SS', str(num_cat))
+            self.Talk(s)
 
-	def getVoice(self):
+            time.sleep(0.5)
 
-		return(self.onVoice)
+        elif num_dog == 1 and num_cat == 0:
 
+            s = self.dialogs.get_dogWho()
+            self.Talk(s)
 
-	def TalkingInit(self, phrase):
 
-		self.engine.say(phrase)
-		self.engine.runAndWait()
+        elif num_dog > 1 and num_cat == 0:
+            s = self.dialogs.dog_whos
+            self.Talk(s)
 
+        elif num_dog == 0 and num_cat == 1:
 
+            s = self.dialogs.cat_who
+            self.Talk(s)
 
+        elif num_dog == 0 and num_cat > 1:
 
+            s = self.dialogs.cat_whos
+            self.Talk(s)
 
-	def welcome_sentence(self):
+    def questions_pet(self, num_dog, num_cat, cont):
 
-		s = self.dialogs.welcome_sentence
-		self.Talk(s)
-		time.sleep(0.1)
+        if ((num_dog > 0) and (num_cat > 0)):
 
-		s = self.dialogs.welcome_sentence2
-		self.Talk(s)
-		time.sleep(0.1)
+            if cont == 1:
+                s = self.dialogs.petQ1
+                self.Talk(s)
+                time.sleep(0.5)
 
-		s = self.dialogs.welcome_sentence3
-		self.Talk(s)
-		time.sleep(0.1)
+            if cont == 2:
+                s = self.dialogs.petQ1
+                self.Talk(s)
+                time.sleep(0.5)
 
-		self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "WelcomingSentence", v ="True")
+            elif cont == 3:
 
-		#self.engine.stop()
+                s = self.dialogs.petQ2
+                self.Talk(s)
+                time.sleep(0.5)
 
-		self.onVoice = False
+            elif cont == 4:
 
+                s = self.dialogs.petQ3
+                self.Talk(s)
+                time.sleep(0.5)
 
 
-	def image_validation(self, m):
+            elif cont == 5:
+                s = self.dialogs.petQ4
+                self.Talk(s)
+                time.sleep(0.5)
+                self.whoVal.remove('dog')
+                self.whoVal.remove('cat')
 
 
-		if m == True:
-			s = self.dialogs.image_validationbad
-			self.Talk(s)
-			time.sleep(0.1)
-			s = self.dialogs.image_validationbad1
-			self.Talk("You want to continue?, or, You want to upload a new image?")
-			
 
-		else:
-			s = self.dialogs.image_validationgreat
-			self.Talk(s)
-			time.sleep(0.1)
-			s = self.dialogs.image_validationgreat1
-			self.Talk(s)
-			time.sleep(0.1)
-			self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "ImageValidation", v ="True")
-			s = self.dialogs.choose_photo
-			self.Talk(s)
-			self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "ImageSelection", v ="True")
 
+        elif num_dog == 1 and num_cat == 0:
 
+            if cont == 1:
+                s = self.dialogs.dogQ1
+                self.Talk(s)
+                time.sleep(0.5)
 
-		self.onVoice = False
+            if cont == 2:
 
+                s = self.dialogs.dogQ1
+                self.Talk(s)
+                time.sleep(0.5)
 
+            elif cont == 3:
 
+                s = self.dialogs.dogQ2
+                self.Talk(s)
+                time.sleep(0.5)
 
-	def set_petrecognized(self, num_dog, num_cat):
+            elif cont == 4:
 
-		print('dog', num_dog)
-		print('cat', num_cat)
+                s = self.dialogs.dogQ3
+                self.Talk(s)
+                time.sleep(0.5)
 
+            elif cont == 5:
+                s = self.dialogs.dogQ4
+                self.Talk(s)
+                time.sleep(0.5)
+                self.whoVal.remove('dog')
 
-		if ((num_dog > 0) and (num_cat > 0)):
 
-			s = self.dialogs.get_petWho()
-			s = s.replace('XX', str(num_dog))
-			s = s.replace('SS', str(num_cat))
-			self.Talk(s)
 
-			time.sleep(0.5)
+        elif num_dog > 1 and num_cat == 0:
 
-		elif num_dog == 1 and num_cat ==0:
+            if cont == 1:
+                s = self.dialogs.petQ1
+                self.Talk(s)
+                time.sleep(0.5)
 
-			s = self.dialogs.get_dogWho()
-			self.Talk(s)
+            if cont == 2:
 
+                s = self.dialogs.dogsQ1
+                self.Talk(s)
+                time.sleep(0.5)
 
-		elif num_dog > 1 and num_cat == 0:
-			s = self.dialogs.dog_whos
-			self.Talk(s)
+            elif cont == 3:
 
-		elif num_dog == 0 and num_cat ==1:
+                s = self.dialogs.dogsQ2
+                self.Talk(s)
+                time.sleep(0.5)
 
-			s = self.dialogs.cat_who
-			self.Talk(s)
+            elif cont == 4:
 
-		elif num_dog == 0 and num_cat > 1:
+                s = self.dialogs.dogsQ3
+                self.Talk(s)
+                time.sleep(0.5)
 
-			s = self.dialogs.cat_whos
-			self.Talk(s)
-		
+            elif cont == 5:
+                s = self.dialogs.dogsQ4
+                self.Talk(s)
+                time.sleep(0.5)
+                self.whoVal.remove('dog')
 
 
 
-	def questions_pet(self, num_dog, num_cat, cont):
 
+        elif num_dog == 0 and num_cat == 1:
 
-		if ((num_dog > 0) and (num_cat > 0)):
+            if cont == 2:
+                s = self.dialogs.catQ1
+                self.Talk(s)
+                time.sleep(0.5)
 
-			if cont == 1 :
-				s = self.dialogs.petQ1
-				self.Talk(s)
-				time.sleep(0.5)
+            elif cont == 3:
 
-			if cont == 2 :
-				s = self.dialogs.petQ1
-				self.Talk(s)
-				time.sleep(0.5)
+                s = self.dialogs.catQ2
+                self.Talk(s)
+                time.sleep(0.5)
 
-			elif cont == 3:
+            elif cont == 4:
 
-				s = self.dialogs.petQ2
-				self.Talk(s)
-				time.sleep(0.5)
+                s = self.dialogs.catQ3
+                self.Talk(s)
+                time.sleep(0.5)
 
-			elif cont == 4:
 
-				s = self.dialogs.petQ3
-				self.Talk(s)
-				time.sleep(0.5)
-				
+            elif cont == 5:
+                s = self.dialogs.catQ4
+                self.Talk(s)
+                time.sleep(0.5)
+                self.whoVal.remove('cat')
 
-			elif cont ==5:
-				s = self.dialogs.petQ4
-				self.Talk(s)
-				time.sleep(0.5)
-				self.whoVal.remove('dog')
-				self.whoVal.remove('cat')
 
 
+        elif num_dog == 0 and num_cat > 1:
 
+            if cont == 2:
 
-		elif num_dog == 1 and num_cat ==0:
+                s = self.dialogs.catsQ1
+                self.Talk(s)
+                time.sleep(0.5)
 
-			if cont == 1 :
-				s = self.dialogs.dogQ1
-				self.Talk(s)
-				time.sleep(0.5)
+            elif cont == 3:
 
-			if cont == 2:
+                s = self.dialogs.catQ2
+                self.Talk(s)
+                time.sleep(0.5)
 
-				s = self.dialogs.dogQ1
-				self.Talk(s)
-				time.sleep(0.5)
+            elif cont == 4:
 
-			elif cont == 3:
+                s = self.dialogs.catsQ3
+                self.Talk(s)
+                time.sleep(0.5)
 
-				s = self.dialogs.dogQ2
-				self.Talk(s)
-				time.sleep(0.5)
+            elif cont == 5:
+                s = self.dialogs.catsQ4
+                self.Talk(s)
+                time.sleep(0.5)
+                self.whoVal.remove('cat')
 
-			elif cont == 4:
+    def questions_where(self, num_wineglass, num_cup, num_fork, num_spoon, num_car, num_bus, num_trlig, num_stopsig,
+                        cont):
 
-				s = self.dialogs.dogQ3
-				self.Talk(s)
-				time.sleep(0.5)
+        print('where_function')
 
-			elif cont == 5:
-				s = self.dialogs.dogQ4
-				self.Talk(s)
-				time.sleep(0.5)
-				self.whoVal.remove('dog')
+        if num_wineglass > 0 and num_cup > 0 and num_fork > 0 and num_spoon > 0:
 
-				
+            if cont == 1:
+                s = self.dialogs.whereq1
+                self.Talk(s)
+                time.sleep(2)
+                self.whereVal.remove('wine_glass')
+                self.whereVal.remove('cup')
+                self.whereVal.remove('fork')
+                self.whereVal.remove('spoon')
+                self.whereVal.remove('knife')
 
-		elif num_dog > 1 and num_cat == 0:
 
-			if cont == 1 :
-				s = self.dialogs.petQ1
-				self.Talk(s)
-				time.sleep(0.5)
+        elif num_wineglass > 0 or num_cup > 0 or num_fork > 0 or num_spoon > 0:
 
-			if cont == 2:
+            print('num_cup', num_cup)
 
-				s = self.dialogs.dogsQ1
-				self.Talk(s)
-				time.sleep(0.5)
+            # print('This option')
 
-			elif cont == 3:
+            if cont == 1:
+                # print('This option 1')
+                s = self.dialogs.whereq11
+                print(s)
+                self.Talk(s)
+                time.sleep(2)
+                if num_wineglass > 0:
+                    self.whereVal.remove('wine_glass')
+                if num_cup > 0:
+                    self.whereVal.remove('cup')
+                if num_fork > 0:
+                    self.whereVal.remove('fork')
+                if num_spoon > 0:
+                    self.whereVal.remove('spoon')
 
-				s = self.dialogs.dogsQ2
-				self.Talk(s)
-				time.sleep(0.5)
 
-			elif cont == 4:
 
-				s = self.dialogs.dogsQ3
-				self.Talk(s)
-				time.sleep(0.5)
+        elif num_car > 0 and num_bus > 0 and num_trlig > 0 and num_stopsig > 0:
+            # Is there a  street or a crowded place
 
-			elif cont ==5:
-				s = self.dialogs.dogsQ4
-				self.Talk(s)
-				time.sleep(0.5)
-				self.whoVal.remove('dog')
-	
+            if cont == 1:
+                pass
 
+    def set_personrecognized(self, num):
 
+        if num == 1:
 
-		elif num_dog == 0 and num_cat ==1:
+            s = self.dialogs.get_person_sentence()
+            s = s.replace('XX', str(num))
+            self.Talk(s)
 
-			if cont == 2:
-				s = self.dialogs.catQ1
-				self.Talk(s)
-				time.sleep(0.5)
+            time.sleep(0.5)
 
-			elif cont == 3:
+            s = self.dialogs.get_whoquestion()
+            self.Talk(s)
 
-				s = self.dialogs.catQ2
-				self.Talk(s)
-				time.sleep(0.5)
 
-			elif cont == 4:
 
-				s = self.dialogs.catQ3
-				self.Talk(s)
-				time.sleep(0.5)
-		
+        else:
 
-			elif cont ==5:
-				s = self.dialogs.catQ4
-				self.Talk(s)
-				time.sleep(0.5)
-				self.whoVal.remove('cat')
+            s = self.dialogs.get_numpersons_sentence()
+            s = s.replace('XX', str(num))
+            self.Talk(s)
 
+            time.sleep(0.5)
 
+            s = self.dialogs.get_whoquestions()
+            self.Talk(s)
 
-		elif num_dog == 0 and num_cat > 1:
+    def commenting_photos(self):
 
+        print('Commenting the photos')
 
-			if cont == 2:
+        s = self.dialogs.commenting_photo
+        self.Talk(s)
+        time.sleep(0.1)
 
-				s = self.dialogs.catsQ1
-				self.Talk(s)
-				time.sleep(0.5)
+        s = self.dialogs.analizing_photo
+        self.Talk(s)
+        time.sleep(0.1)
 
-			elif cont == 3:
+        self.DB.General.SM.loadEvent(t="AvatarTalking", c="Commenting Photos", v="True")
 
-				s = self.dialogs.catQ2
-				self.Talk(s)
-				time.sleep(0.5)
+        self.onVoice = False
 
-			elif cont == 4:
+    def conversation_topics(self, m):
 
-				s = self.dialogs.catsQ3
-				self.Talk(s)
-				time.sleep(0.5)
-	
-			elif cont == 5:
-				s = self.dialogs.catsQ4
-				self.Talk(s)
-				time.sleep(0.5)
-				self.whoVal.remove('cat')
+        print(m)
+        persons = int(m['person'])
+        dog = int(m['dog'])
+        cat = int(m['cat'])
 
-	def questions_where(self, num_wineglass, num_cup, num_fork, num_spoon, num_car, num_bus, num_trlig, num_stopsig, cont):
+        self.who = {"persons": persons, "dog": dog, "cat": cat}
 
-		print('where_function')
+        self.whoVal = [word for word, occurrences in self.who.items() if occurrences > 0]
 
+        # print(self.whoVal)
+        # print(len(self.whoVal))
 
-		if num_wineglass>0 and num_cup >0 and num_fork>0 and num_spoon>0:
+        # Food Places
+        whine_glass = int(m['wine glass'])
+        cup = int(m['cup'])
+        fork = int(m['fork'])
+        spoon = int(m['spoon'])
+        knife = int(m['knife'])
 
-			if cont == 1:
-				s = self.dialogs.whereq1
-				self.Talk(s)
-				time.sleep(2)
-				self.whereVal.remove('wine_glass')
-				self.whereVal.remove('cup')
-				self.whereVal.remove('fork')
-				self.whereVal.remove('spoon')
-				self.whereVal.remove('knife')
+        # Transport - Street Places
+        car = int(m['car'])
+        bus = int(m['bus'])
+        traffic_light = int(m['traffic light'])
+        stop_sign = int(m['stop sign'])
 
+        self.where = {"wine_glass": whine_glass, "cup": cup, "fork": fork, "spoon": spoon, "knife": knife, "car": car,
+                      "bus": bus, "traffic_light": traffic_light, "stop_sign": stop_sign}
 
-		elif num_wineglass>0 or num_cup >0 or num_fork>0 or num_spoon>0:
+        self.whereVal = [word for word, occurrences in self.where.items() if occurrences > 0]
 
-			print('num_cup', num_cup)
+        print(self.whereVal)
+        # print(len(self.whereVal))
 
-			#print('This option')
+        book = int(m['book'])
+        self.otherTopics = {"book": book}
 
-			if cont == 1:
-				#print('This option 1')
-				s = self.dialogs.whereq11
-				print(s)
-				self.Talk(s)
-				time.sleep(2)
-				if num_wineglass > 0:
-					self.whereVal.remove('wine_glass')
-				if num_cup > 0:
-					self.whereVal.remove('cup')
-				if num_fork > 0:
-					self.whereVal.remove('fork')
-				if num_spoon > 0:
-					self.whereVal.remove('spoon')
+        self.otherTopics = [word for word, occurrences in self.otherTopics.items() if occurrences > 0]
 
+    # self.validation_dataWho()
 
+    def coversation_beginning(self):
 
-		elif num_car>0 and num_bus>0 and num_trlig>0 and num_stopsig>0:
-			# Is there a  street or a crowded place
+        # print('In coversation_beginning')
 
-			if cont == 1:
-				pass
+        self.Talk("Please say yes if you want to continue, if you don't please say no")
+        self.DB.General.SM.loadEvent(t="AvatarTalking", c="StartingSentence", v="True")
+        self.onVoice = False
 
+    def no_understanding(self):
 
-		
+        self.Talk('Im sorry I dont understand, can you say it in a different way?')
+        self.DB.General.SM.loadEvent(t="AvatarTalking", c="StartingSentence", v="Other-word")
+        self.onVoice = False
 
+    def sr_beginning(self):
 
+        # Speech recognition implementation
+        while (self.word_recognized == None):
 
+            try:
+                with sr.Microphone() as source2:
+                    print('here, heariiiing')
+                    self.r.adjust_for_ambient_noise(source2)
+                    self.audio2 = self.r.listen(source2)
+                    self.word_recognized = self.r.recognize_google(self.audio2)
+                    self.word_recognized = self.word_recognized.lower()
+                # print(self.word_recognized)
 
 
+            except sr.RequestError as e:
 
+                print("Could not request results")
 
+            except sr.UnknownValueError:
 
+                self.cc = self.cc + 1
 
+                if self.cc == 2:
+                    self.Talk('I cannot understand you, could you repeat please?')
+                    self.onVoice = False
+                    time.sleep(0.1)
+                    self.cc = 0
 
-	def set_personrecognized(self, num):
+        return (self.word_recognized)
 
-		if num == 1:
+    def no_beginning(self):
 
-			s = self.dialogs.get_person_sentence()
-			s = s.replace('XX', str(num))
-			self.Talk(s)
+        s = self.dialogs.no_begin()
+        print(s)
+        self.Talk(s)
+        time.sleep(0.1)
 
+    def set_Dialog(self, data):
 
-			time.sleep(0.5)
+        print('-----------Not Talkiiiiiiing--------')
+        self.onVoice = False
+        self.y = self.y + 1
 
-			s = self.dialogs.get_whoquestion()
-			self.Talk(s)
+        [change, voice_act, voice_deac] = self.test(data)
 
+        self.flag = change
+        print('flag', self.flag)
 
+        if self.y == 1:
 
-		else:
+            if (len(self.whoVal) > 0):
 
-			s = self.dialogs.get_numpersons_sentence()
-			s = s.replace('XX', str(num))
-			self.Talk(s)
+                if ("persons" in self.whoVal):
 
-			time.sleep(0.5)
+                    self.set_personrecognized(self.who['persons'])
+                    time.sleep(1)
 
-			s = self.dialogs.get_whoquestions()
-			self.Talk(s)
 
+                elif ("dog" in self.whoVal) or ("cat" in self.whoVal):
 
-	def commenting_photos(self):
+                    self.set_petrecognized(self.who['dog'], self.who['cat'])
+                    self.questions_pet(self.who['dog'], self.who['cat'], self.cont)
+                    time.sleep(1)
 
-		print('Commenting the photos')
+            elif (len(self.whereVal) > 0):
 
-		s = self.dialogs.commenting_photo
-		self.Talk(s)
-		time.sleep(0.1)
+                if ("wine_glass" in self.whereVal) and ("cup" in self.whereVal) and ("fork" in self.whereVal) and (
+                        "spoon" in self.whereVal):
+                    s = self.dialogs.get_whereq1()
+                    self.Talk(s)
+                    time.sleep(1)
 
-		s = self.dialogs.analizing_photo
-		self.Talk(s)
-		time.sleep(0.1)
+                if ("wine_glass" in self.whereVal) or ("cup" in self.whereVal) or ("fork" in self.whereVal) or (
+                        "spoon" in self.whereVal):
+                    s = self.dialogs.get_whereq11()
+                    self.Talk(s)
+                    time.sleep(1)
 
-		self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Commenting Photos", v ="True")
+            else:
 
-		self.onVoice = False
-		
+                self.DB.General.SM.loadEvent(t="AvatarTalking", c="Dialog", v="When")
+                s = self.dialogs.get_When1()
+                print(s)
+                self.Talk(s)
+                pass
 
+        # print('CONTADOR', self.cont)
 
+        # self.sr_beginning()
 
-	def conversation_topics(self, m):
+        if self.flag == 2 and self.y > 1:
 
+            # print(data)
 
-		print(m)
-		persons = int(m['person'])
-		dog = int(m['dog'])
-		cat = int(m['cat'])
+            self.cont = self.cont + 1
+            self.cont1 = 0
+            time.sleep(0.5)
 
-		self.who = {"persons": persons, "dog": dog, "cat": cat}
+            print('CONTADOR.......', self.cont)
 
-		self.whoVal = [word for word, occurrences in self.who.items() if occurrences > 0]
+            if self.flag_topic == "Who":
 
-		
-		#print(self.whoVal)
-		#print(len(self.whoVal))
+                if (len(self.whoVal) > 0):
 
+                    if ("persons" in self.whoVal):
 
+                        # Questions regarding WHO
 
-		#Food Places
-		whine_glass = int(m['wine glass'])
-		cup = int(m['cup'])
-		fork = int(m['fork'])
-		spoon = int(m['spoon'])
-		knife = int(m['knife'])
+                        if self.cont == 2:
 
+                            self.DB.General.SM.loadEvent(t="AvatarTalking", c="Dialog", v="Persons-q2")
 
-		# Transport - Street Places
-		car = int(m['car'])
-		bus = int(m['bus'])
-		traffic_light = int(m['traffic light'])
-		stop_sign = int(m['stop sign'])
+                            time.sleep(1)
 
+                            if self.who['persons'] == 1:
+                                s = self.dialogs.get_connectiveWho1()
+                                self.Talk(s)
+                            else:
+                                s = self.dialogs.get_connectiveWhos1()
+                                self.Talk(s)
+                                print('plural1')
 
 
+                        elif self.cont == 3:
 
-		self.where = {"wine_glass": whine_glass, "cup": cup, "fork": fork, "spoon": spoon, "knife": knife, "car": car, "bus": bus, "traffic_light": traffic_light, "stop_sign": stop_sign}
+                            self.DB.General.SM.loadEvent(t="AvatarTalking", c="Dialog", v="Persons-q3")
 
-		self.whereVal = [word for word, occurrences in self.where.items() if occurrences > 0]
+                            if self.who['persons'] == 1:
+                                s = self.dialogs.get_connectiveWho2()
+                                self.Talk(s)
+                            else:
+                                s = self.dialogs.get_connectiveWhos2()
+                                self.Talk(s)
 
-		print(self.whereVal)
-		#print(len(self.whereVal))
 
-		book = int(m['book'])
-		self.otherTopics = {"book":book}
 
-		self.otherTopics = [word for word, occurrences in self.otherTopics.items() if occurrences > 0]
+                        elif self.cont == 4:
 
+                            self.DB.General.SM.loadEvent(t="AvatarTalking", c="Dialog", v="Persons-q4")
 
+                            if self.who['persons'] == 1:
+                                s = self.dialogs.get_connectiveWho3()
+                                self.Talk(s)
+                                s = "Oh! It seem very interesting."
+                                self.whoVal.remove('persons')
+                                self.cont = 0
+                            else:
+                                s = self.dialogs.get_connectiveWhos3()
+                                self.Talk(s)
+                                self.whoVal.remove('persons')
+                                self.cont = 0
 
-		#self.validation_dataWho()
 
+                    elif ("dog" in self.whoVal) or ("cat" in self.whoVal):
 
-	def coversation_beginning(self):
+                        if self.cont == 1:
+                            self.DB.General.SM.loadEvent(t="AvatarTalking", c="Dialog", v="Animals-q1")
 
-		#print('In coversation_beginning')
+                            self.set_petrecognized(self.who['dog'], self.who['cat'])
+                            self.questions_pet(self.who['dog'], self.who['cat'], self.cont)
 
-		self.Talk("Please say yes if you want to continue, if you don't please say no")
-		self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "StartingSentence", v ="True")
-		self.onVoice = False
+                            time.sleep(1)
 
+                        if self.cont == 2:
+                            self.DB.General.SM.loadEvent(t="AvatarTalking", c="Dialog", v="Animals-q2")
 
-	def no_understanding(self):
+                            self.questions_pet(self.who['dog'], self.who['cat'], self.cont)
 
-		self.Talk('Im sorry I dont understand, can you say it in a different way?')
-		self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "StartingSentence", v ="Other-word")
-		self.onVoice = False
+                        if self.cont == 3:
+                            self.DB.General.SM.loadEvent(t="AvatarTalking", c="Dialog", v="Animals-q3")
 
+                            print("dogs 2")
 
+                            self.questions_pet(self.who['dog'], self.who['cat'], self.cont)
 
+                        if self.cont == 4:
+                            self.DB.General.SM.loadEvent(t="AvatarTalking", c="Dialog", v="Animals-q4")
 
-	def sr_beginning(self):
+                            self.questions_pet(self.who['dog'], self.who['cat'], self.cont)
 
-		# Speech recognition implementation
-		while(self.word_recognized == None):
+                        if self.cont == 5:
+                            self.DB.General.SM.loadEvent(t="AvatarTalking", c="Dialog", v="Animals-q5")
 
-			try:
-				with sr.Microphone() as source2:
-					print('here, heariiiing')
-					self.r.adjust_for_ambient_noise(source2)
-					self.audio2 = self.r.listen(source2)
-					self.word_recognized = self.r.recognize_google(self.audio2)
-					self.word_recognized = self.word_recognized.lower()
-					#print(self.word_recognized)
+                            self.questions_pet(self.who['dog'], self.who['cat'], self.cont)
+                            self.cont = 1
+                            self.flag_topic = "When"
 
 
-			except sr.RequestError as e:
+                else:
 
-				print("Could not request results")
+                    # Cannot see people in the photos, let me ask another question
 
-			except sr.UnknownValueError:
+                    self.flag_topic = "When"
+                # self.cont = 1
 
-				self.cc = self.cc+1
-				
-				if self.cc == 2:
-					self.Talk('I cannot understand you, could you repeat please?')
-					self.onVoice = False
-					time.sleep(0.1)
-					self.cc = 0
+            if self.flag_topic == "When":
 
+                if self.cont == 1:
+                    self.DB.General.SM.loadEvent(t="AvatarTalking", c="Dialog", v="When-q1")
+                    s = self.dialogs.get_When1()
+                    self.Talk(s)
+                # time.sleep(4)
 
-		return(self.word_recognized)
+                if self.cont == 2:
+                    self.DB.General.SM.loadEvent(t="AvatarTalking", c="Dialog", v="When-q2")
+                    s = self.dialogs.get_When2()
+                    self.Talk(s)
+                    self.flag_topic = "Where"
+                    self.cont = 0
+                # time.sleep(4)
 
+            if self.flag_topic == "Where":
 
+                time.sleep(1)
 
-	def no_beginning(self):
+                if (len(self.whereVal) > 0):
 
-		s = self.dialogs.no_begin()
-		print(s)
-		self.Talk(s)
-		time.sleep(0.1)
+                    if self.cont == 1:
+                        print('HERE Where 1')
 
+                        self.DB.General.SM.loadEvent(t="AvatarTalking", c="Dialog", v="where-q1")
+                        # Put the dialogs here for the first question depends on the data acquire from the images
+                        self.questions_where(self.where['wine_glass'], self.where['cup'], self.where['fork'],
+                                             self.where['spoon'], self.where['car'], self.where['bus'],
+                                             self.where['traffic_light'], self.where['stop_sign'], self.cont)
+                        print(self.whereVal)
+                        print(len(self.whereVal))
+                else:
 
+                    if self.cont == 1:
+                        self.DB.General.SM.loadEvent(t="AvatarTalking", c="Dialog", v="Where-q1n")
 
-	def set_Dialog(self, data):
+                        s = 'Oh, I cannot tell where the photo was taken. Where was it?'
+                        print(s)
+                        self.Talk(s)
+                    # time.sleep(4)
 
-		
-		print('-----------Not Talkiiiiiiing--------')
-		self.onVoice = False
-		self.y = self.y + 1
+                    if self.cont == 2:
+                        self.DB.General.SM.loadEvent(t="AvatarTalking", c="Dialog", v="Where-q2")
+                        s = self.dialogs.get_whereq()
+                        self.Talk(s)
+                        time.sleep(0.5)
 
-		[change, voice_act, voice_deac] = self.test(data)
+                    if self.cont == 3:
+                        self.DB.General.SM.loadEvent(t="AvatarTalking", c="Dialog", v="Where-q3")
+                        s = self.dialogs.get_where1q()
+                        self.Talk(s)
+                        time.sleep(0.5)
+                        self.flag_topic = "Other"
+                        self.cont = 0
 
-		self.flag = change
-		print('flag', self.flag)
+            if self.flag_topic == "Other":
 
+                if (len(self.otherTopics) > 0):
 
-		if self.y == 1:
+                    pass
 
-			if (len(self.whoVal)>0):
+                else:
 
-				if ("persons" in self.whoVal):
+                    if self.cont == 1:
+                        s = 'One last question. Can you talk about other things about this photo?'
+                        print(s)
+                        self.Talk(s)
+                    # time.sleep(4)
 
-					self.set_personrecognized(self.who['persons'])
-					time.sleep(1)
+                    if self.cont == 2:
+                        s = 'Ahhh that is interesting.'
+                        print(s)
+                        self.Talk(s)
+                        self.flag_topic = "End"
 
 
-				elif ("dog" in self.whoVal) or ("cat" in self.whoVal):
+        elif self.flag == 0:
 
-					self.set_petrecognized(self.who['dog'], self.who['cat'])
-					self.questions_pet(self.who['dog'], self.who['cat'], self.cont)
-					time.sleep(1)
+            self.cont1 = self.cont1 + 1
 
-			elif (len(self.whereVal)>0):
+            if self.cont1 == 30:
+                self.Talk("Sorry, I couldn't  hear that")
+                self.cont1 = 0
 
-				if ("wine_glass" in self.whereVal) and ("cup" in self.whereVal) and ("fork" in self.whereVal) and ("spoon" in self.whereVal):
+    def end_phrase(self):
 
-					s = self.dialogs.get_whereq1()
-					self.Talk(s)
-					time.sleep(1)
+        self.Talk("Was nice to talk with you. Hope we can talk togheter soon")
+        time.sleep(1)
+        self.Talk("See ya")
 
-				if ("wine_glass" in self.whereVal) or ("cup" in self.whereVal) or ("fork" in self.whereVal) or ("spoon" in self.whereVal):
+    def topic_Status(self):
 
-					s = self.dialogs.get_whereq11()
-					self.Talk(s)
-					time.sleep(1)
+        return (self.flag_topic)
 
-			else:
+    def test(self, m):
 
-				self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Dialog", v ="When")
-				s = self.dialogs.get_When1()
-				print(s)
-				self.Talk(s)
-				pass
+        new_value = m
 
+        if new_value is not None and new_value is not self.last_value:
 
+            if new_value:
 
+                self.change = 1
 
+                # print('False to True')
+                self.voice_act = self.voice_act + 1
+                print('Voice active:', self.voice_act)
 
-		
-		#print('CONTADOR', self.cont)
+            else:
 
+                self.change = 2
+                # print('True to False')
+                self.voice_deac = self.voice_deac + 1
+                print('Voice deactive:', self.voice_deac)
 
-		#self.sr_beginning()
+        else:
 
+            self.change = 0
 
-		if self.flag == 2 and self.y > 1:
+        self.last_value = new_value
 
-		
-			#print(data)
+        # print('change from testing', self.change)
 
-			self.cont = self.cont + 1
-			self.cont1 = 0
-			time.sleep(0.5)
-
-			print('CONTADOR.......', self.cont)
-
-
-			if self.flag_topic == "Who":
-
-				if (len(self.whoVal)>0):
-
-					if ("persons" in self.whoVal):
-
-
-
-						#Questions regarding WHO
-
-						
-						if self.cont == 2:
-
-							self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Dialog", v ="Persons-q2")
-
-							time.sleep(1)
-
-
-							if self.who['persons'] ==1:
-								s = self.dialogs.get_connectiveWho1()
-								self.Talk(s)
-							else:
-								s = self.dialogs.get_connectiveWhos1()
-								self.Talk(s)
-								print('plural1')
-
-
-						elif self.cont == 3:
-
-							self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Dialog", v ="Persons-q3")
-
-							if self.who['persons']==1:
-								s = self.dialogs.get_connectiveWho2()
-								self.Talk(s)
-							else:
-								s = self.dialogs.get_connectiveWhos2()
-								self.Talk(s)
-
-						
-
-						elif self.cont == 4:
-
-
-							self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Dialog", v ="Persons-q4")
-
-							if self.who['persons']==1:
-								s = self.dialogs.get_connectiveWho3()
-								self.Talk(s)
-								s = "Oh! It seem very interesting."
-								self.whoVal.remove('persons')
-								self.cont = 0
-							else:
-								s = self.dialogs.get_connectiveWhos3()
-								self.Talk(s)
-								self.whoVal.remove('persons')
-								self.cont = 0 
-	
-
-					elif ("dog" in self.whoVal) or ("cat" in self.whoVal):
-
-
-						if self.cont == 1:
-
-							self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Dialog", v ="Animals-q1")
-
-							self.set_petrecognized(self.who['dog'], self.who['cat'])
-							self.questions_pet(self.who['dog'], self.who['cat'], self.cont)
-
-							time.sleep(1)
-
-						if self.cont == 2:
-
-							self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Dialog", v ="Animals-q2")
-
-							self.questions_pet(self.who['dog'], self.who['cat'], self.cont)
-
-
-						if self.cont == 3:
-
-							self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Dialog", v ="Animals-q3")
-
-							print("dogs 2")
-
-							self.questions_pet(self.who['dog'], self.who['cat'], self.cont)
-
-
-						if self.cont == 4:
-
-							self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Dialog", v ="Animals-q4")
-
-							self.questions_pet(self.who['dog'], self.who['cat'], self.cont)
-
-						if self.cont == 5:
-
-							self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Dialog", v ="Animals-q5")
-							
-							self.questions_pet(self.who['dog'], self.who['cat'], self.cont)
-							self.cont = 1
-							self.flag_topic = "When"
-
-
-				else:
-
-					# Cannot see people in the photos, let me ask another question
-
-					self.flag_topic = "When"
-					#self.cont = 1
-
-				
-			if self.flag_topic == "When":
-
-				if self.cont == 1:
-
-					self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Dialog", v ="When-q1")
-					s = self.dialogs.get_When1()
-					self.Talk(s)
-					#time.sleep(4)
-
-				if self.cont == 2:
-
-					self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Dialog", v ="When-q2")
-					s = self.dialogs.get_When2()
-					self.Talk(s)
-					self.flag_topic = "Where"
-					self.cont = 0
-					#time.sleep(4)				
-					
-
-
-			if self.flag_topic == "Where":
-
-				time.sleep(1)
-
-				if (len(self.whereVal)>0):
-
-
-					if self.cont == 1:
-
-						print('HERE Where 1')
-
-						self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Dialog", v ="where-q1")
-						#Put the dialogs here for the first question depends on the data acquire from the images
-						self.questions_where(self.where['wine_glass'], self.where['cup'],self.where['fork'], self.where['spoon'], self.where['car'], self.where['bus'], self.where['traffic_light'], self.where['stop_sign'], self.cont)
-						print(self.whereVal)
-						print(len(self.whereVal))
-				else:	
-
-					if self.cont == 1:
-
-						self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Dialog", v ="Where-q1n")
-
-						s = 'Oh, I cannot tell where the photo was taken. Where was it?'
-						print(s)
-						self.Talk(s)
-						#time.sleep(4)
-						
-
-					if self.cont == 2:
-
-						self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Dialog", v ="Where-q2")
-						s = self.dialogs.get_whereq()
-						self.Talk(s)
-						time.sleep(0.5)
-
-
-
-					if self.cont == 3:
-						
-						self.DB.General.SM.loadEvent(t = "AvatarTalking", c = "Dialog", v ="Where-q3")
-						s = self.dialogs.get_where1q()
-						self.Talk(s)
-						time.sleep(0.5)
-						self.flag_topic = "Other"
-						self.cont = 0
-
-
-
-
-			if self.flag_topic == "Other":
-
-
-				if (len(self.otherTopics)>0):
-
-					pass
-
-				else:
-
-					if self.cont == 1:
-						s = 'One last question. Can you talk about other things about this photo?'
-						print(s)
-						self.Talk(s)
-						#time.sleep(4)
-						
-
-					if self.cont == 2:
-
-						s = 'Ahhh that is interesting.'
-						print(s)
-						self.Talk(s)
-						self.flag_topic = "End"
-
-
-		elif self.flag == 0:
-
-			self.cont1 = self.cont1 +1
-
-
-			if self.cont1 == 30:
-
-				self.Talk("Sorry, I couldn't  hear that")
-				self.cont1 = 0
-
-
-
-
-	def end_phrase(self):
-
-		self.Talk("Was nice to talk with you. Hope we can talk togheter soon")
-		time.sleep(1)
-		self.Talk("See ya")
-
-
-
-
-	def topic_Status(self):
-
-		return(self.flag_topic)
-
-	
-	def test(self,m):
-
-		new_value = m
-
-
-		if new_value is not None and new_value is not self.last_value:
-
-			if new_value:
-
-				self.change = 1
-
-				#print('False to True')
-				self.voice_act = self.voice_act + 1
-				print('Voice active:', self.voice_act)
-
-			else:
-
-				self.change = 2
-				#print('True to False')
-				self.voice_deac = self.voice_deac + 1
-				print('Voice deactive:', self.voice_deac)
-
-		else:
-
-			self.change = 0
-
-
-		self.last_value = new_value
-
-
-		#print('change from testing', self.change)
-
-		return [self.change, self.voice_act, self.voice_deac]
-
-
+        return [self.change, self.voice_act, self.voice_deac]
 
 
 '''
@@ -991,14 +862,6 @@ class TTSThread(threading.Thread):
 
 '''
 
-
-
-
-
-
-
-
-
 '''
 def main():
 
@@ -1022,7 +885,3 @@ A = main()
 
 
 '''
-
-
-
-

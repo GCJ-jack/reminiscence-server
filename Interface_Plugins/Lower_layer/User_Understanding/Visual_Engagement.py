@@ -6,218 +6,191 @@ import sys
 import threading
 import time
 import os
+
 path = os.path.abspath(os.path.join(os.path.dirname(__file__)))
 print(path)
 
 
-
 class Visual_EngagementTracker(object):
 
+    def __init__(self, DataHandler=None, pred_path=None, window=None):
 
-	def __init__(self, DataHandler = None, pred_path = None, window = None):
+        self.DB = DataHandler
 
-		self.DB  = DataHandler
+        self.window = window
 
-		self.window = window
+        self.detector = dlib.get_frontal_face_detector()
 
-		self.detector = dlib.get_frontal_face_detector()
+        # predictors/shape_predictor_68_face_landmarks.dat
 
+        self.predictor = dlib.shape_predictor(path + '/predictors/shape_predictor_68_face_landmarks.dat')
 
-		#predictors/shape_predictor_68_face_landmarks.dat
+        self.gaze_ratio = 0
 
-		self.predictor = dlib.shape_predictor(path +'/predictors/shape_predictor_68_face_landmarks.dat') 
+        self.eye_direction = None
 
-		self.gaze_ratio = 0
+        self.gaze = None
 
-		self.eye_direction = None
+        self.angles = [0] * 4
 
-		self.gaze = None
+        # Initializing Thresholds
+        self.ey = 0
+        self.hp = 0
 
-		self.angles = [0] * 4
+        print('Primero')
 
+    def get_gazeRatio(self, eye_points, landmarks):
 
-		#Initializing Thresholds
-		self.ey = 0
-		self.hp = 0
+        # Gaze detection
+        # Points where the eye region is enclosed
+        left_eye_region = np.array([(landmarks.part(eye_points[0]).x, landmarks.part(eye_points[0]).y),
+                                    (landmarks.part(eye_points[1]).x, landmarks.part(eye_points[1]).y),
+                                    (landmarks.part(eye_points[2]).x, landmarks.part(eye_points[2]).y),
+                                    (landmarks.part(eye_points[3]).x, landmarks.part(eye_points[3]).y),
+                                    (landmarks.part(eye_points[4]).x, landmarks.part(eye_points[4]).y),
+                                    (landmarks.part(eye_points[5]).x, landmarks.part(eye_points[5]).y)], np.int32)
 
+        # Drawing a poligon with the array of the points encountered before
+        # cv2.polylines(frame, [left_eye_region], True, (0,0,255),2)
 
+        height, width, _ = self.frame.shape
+        mask = np.zeros((height, width), np.uint8)
 
-		print('Primero')
+        # cv2.polylines(frame, [left_eye_region], True, 255,2)
+        cv2.fillPoly(mask, [left_eye_region], 255)
 
+        eye = cv2.bitwise_and(self.gray, self.gray, mask=mask)
 
+        # cv2.imshow('eye', eye)
+        # chosing the eye region in the camera frame
+        min_x = np.min(left_eye_region[:, 0])
+        max_x = np.max(left_eye_region[:, 0])
+        min_y = np.min(left_eye_region[:, 1])
+        max_y = np.max(left_eye_region[:, 1])
 
+        gray_eye = eye[min_y:max_y, min_x:max_x]
+        # gray_eye = cv2.cvtColor(eye, cv2.COLOR_BGR2GRAY)
+        _, threshold_eye = cv2.threshold(gray_eye, 70, 255, cv2.THRESH_BINARY)
+        height, width = threshold_eye.shape
 
+        leftside_thresh = threshold_eye[0:height, 0:int(width / 2)]
+        leftside_white = cv2.countNonZero(leftside_thresh)
 
-	def get_gazeRatio(self, eye_points, landmarks):
+        rigthside_thresh = threshold_eye[0:height, int(width / 2):width]
+        rightside_white = cv2.countNonZero(rigthside_thresh)
 
-		# Gaze detection
-		# Points where the eye region is enclosed
-		left_eye_region = np.array([(landmarks.part(eye_points[0]).x, landmarks.part(eye_points[0]).y),
-									(landmarks.part(eye_points[1]).x, landmarks.part(eye_points[1]).y),
-									(landmarks.part(eye_points[2]).x, landmarks.part(eye_points[2]).y),
-									(landmarks.part(eye_points[3]).x, landmarks.part(eye_points[3]).y),
-									(landmarks.part(eye_points[4]).x, landmarks.part(eye_points[4]).y),
-									(landmarks.part(eye_points[5]).x, landmarks.part(eye_points[5]).y)], np.int32)
+        try:
+            gaze_ratio = float(leftside_white) / float(rightside_white)
 
-		#Drawing a poligon with the array of the points encountered before
-		#cv2.polylines(frame, [left_eye_region], True, (0,0,255),2)
+        except ZeroDivisionError:
 
-	
-		height, width, _ = self.frame.shape
-		mask = np.zeros((height,width), np.uint8)
+            gaze_ratio = 0
 
-		#cv2.polylines(frame, [left_eye_region], True, 255,2)
-		cv2.fillPoly(mask,[left_eye_region], 255)
+        return (gaze_ratio)
 
-		eye = cv2.bitwise_and(self.gray, self.gray, mask = mask)
+    def configuring_brightness(self, img, value):
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        h, s, v = cv2.split(hsv)
 
+        lim = 255 - value
+        v[v > lim] = 255
+        v[v <= lim] += value
 
-		#cv2.imshow('eye', eye)
-		#chosing the eye region in the camera frame
-		min_x = np.min(left_eye_region[:,0])
-		max_x = np.max(left_eye_region[:,0])
-		min_y = np.min(left_eye_region[:,1])
-		max_y = np.max(left_eye_region[:,1])
+        final_hsv = cv2.merge((h, s, v))
+        img = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
+        return img
 
-		gray_eye = eye[min_y:max_y, min_x:max_x]
-		#gray_eye = cv2.cvtColor(eye, cv2.COLOR_BGR2GRAY)
-		_, threshold_eye = cv2.threshold(gray_eye,70,255,cv2.THRESH_BINARY)
-		height, width = threshold_eye.shape
+    def process(self):
 
-		leftside_thresh = threshold_eye[0:height, 0:int(width/2)]
-		leftside_white = cv2.countNonZero(leftside_thresh)
+        print('Here in process')
 
-		rigthside_thresh = threshold_eye[0:height, int(width/2):width]
-		rightside_white = cv2.countNonZero(rigthside_thresh)
+        self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
-		try:
-			gaze_ratio = float(leftside_white)/float(rightside_white)
+        while self.go_on:
 
-		except ZeroDivisionError:
+            _, self.frame = self.cap.read()
+            self.frame = self.configuring_brightness(self.frame, value=30)
+            self.gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+            faces = self.detector(self.gray)
 
-			gaze_ratio = 0
+            model_3D = self.reference_3Dmodel()
 
-		
-		return(gaze_ratio)
+            for face in faces:
 
+                landmarks = self.predictor(self.gray, face)
 
-	def configuring_brightness(self, img, value):
-		hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-		h, s, v = cv2.split(hsv)
+                model_2D = self.reference_2Dmodel(landmarks=landmarks)
 
-		lim = 255 - value
-		v[v > lim] = 255
-		v[v <= lim] += value
+                # size of the image
+                height, width, channel = self.frame.shape
+                # Camera Intrinsic propertis
+                fl = width
+                cx = height / 2
+                cy = width / 2
+                camera_matrix = self.camera_matrix(fl, (cx, cy))
 
-		final_hsv = cv2.merge((h, s, v))
-		img = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
-		return img
+                mdists = np.zeros((4, 1), dtype=np.float64)
 
+                # Calculate rotation and translation vector using solvePnD
 
+                success, rotation, translation = cv2.solvePnP(model_3D, model_2D, camera_matrix, mdists)
 
+                # Calculating angle
 
-	def process(self):
+                rmat, jac = cv2.Rodrigues(rotation)
+                self.angles, mtxR, mtxQ, Qx, Qy, Qz = cv2.RQDecomp3x3(rmat)
 
-		print('Here in process')
+                # Gaze_detection
 
+                gaze_ratio_left_eye = self.get_gazeRatio([36, 37, 38, 39, 40, 41], landmarks=landmarks)
+                gaze_ratio_right_eye = self.get_gazeRatio([42, 43, 44, 45, 46, 47], landmarks=landmarks)
 
-		self.cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+                # print(gaze_ratio_left_eye)
+                # print(gaze_ratio_right_eye)
 
+                self.gaze_ratio = float(gaze_ratio_left_eye + gaze_ratio_right_eye) / float(2)
 
-		while self.go_on:
+                if self.gaze_ratio <= 1:
+                    self.eye_direction = 'right'
 
-			_, self.frame = self.cap.read()
-			self.frame = self.configuring_brightness(self.frame, value = 30)
-			self.gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-			faces = self.detector(self.gray)
+                elif 1 < self.gaze_ratio < 1.7:
 
-			model_3D = self.reference_3Dmodel()
+                    self.eye_direction = 'center'
 
-			for face in faces:
+                else:
+                    self.eye_direction = 'left'
 
-				landmarks = self.predictor(self.gray, face)
+                # gaze = "Looking: "
 
-				model_2D = self.reference_2Dmodel(landmarks = landmarks)
+                if self.angles[1] < -15:
+                    self.gaze = "Left"
+                elif self.angles[1] > 15:
+                    self.gaze = "Right"
+                else:
+                    self.gaze = "Forward"
 
-				#size of the image
-				height, width, channel = self.frame.shape
-				#Camera Intrinsic propertis
-				fl = width
-				cx = height/2
-				cy = width/2
-				camera_matrix = self.camera_matrix(fl,(cx,cy))
+                cv2.putText(self.frame, str(self.eye_direction), (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 3)
+                cv2.putText(self.frame, str(self.gaze), (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 3)
+                # cv2.putText(self.frame, str(self.gaze, (50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255),3)
+                # cv2.putText(frame, str(gaze_ratio_left_eye), (50,150), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255),3)
 
-				mdists = np.zeros((4,1), dtype = np.float64)
+                cv2.imshow("Frame", self.frame)
 
-				#Calculate rotation and translation vector using solvePnD
+                key = cv2.waitKey(1)
 
-				success, rotation, translation = cv2.solvePnP(model_3D, model_2D, camera_matrix, mdists)
+                if key == 27:
+                    break
 
-				#Calculating angle
+                # print('GAZE ratio from VE', self.gaze_ratio)
 
-				rmat, jac = cv2.Rodrigues(rotation)
-				self.angles, mtxR, mtxQ, Qx, Qy, Qz = cv2.RQDecomp3x3(rmat)
+                if self.window == "Therapy":
 
+                    self.comparison()
 
+                else:
+                    pass
 
-				#Gaze_detection 
-
-				gaze_ratio_left_eye = self.get_gazeRatio([36,37,38,39,40,41], landmarks = landmarks)
-				gaze_ratio_right_eye = self.get_gazeRatio([42,43,44,45,46,47], landmarks = landmarks)
-
-				#print(gaze_ratio_left_eye)
-				#print(gaze_ratio_right_eye)
-
-				self.gaze_ratio = float(gaze_ratio_left_eye + gaze_ratio_right_eye)/ float(2)
-
-
-				if self.gaze_ratio <= 1:
-					self.eye_direction = 'right'
-
-				elif 1 < self.gaze_ratio < 1.7:
-
-					self.eye_direction ='center'
-
-				else:
-					self.eye_direction = 'left'
-
-				#gaze = "Looking: "
-
-				if self.angles[1] < -15:
-					self.gaze = "Left"
-				elif self.angles[1] > 15:
-					self.gaze = "Right"
-				else:
-					self.gaze = "Forward"
-
-				
-
-				cv2.putText(self.frame, str(self.eye_direction), (50,100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255),3)
-				cv2.putText(self.frame, str(self.gaze), (50,150), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255),3)				
-				#cv2.putText(self.frame, str(self.gaze, (50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255),3)
-				#cv2.putText(frame, str(gaze_ratio_left_eye), (50,150), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255),3)
-
-				cv2.imshow("Frame", self.frame)
-
-				key = cv2.waitKey(1)
-
-				if key == 27:
-					break
-
-
-				#print('GAZE ratio from VE', self.gaze_ratio)
-
-
-				if self.window == "Therapy":
-
-					self.comparison()
-
-				else:
-					pass
-
-
-			
-				'''
+                '''
 				if self.gaze_ratio <= 1:
 					self.eye_direction = 'right'
 
@@ -239,154 +212,132 @@ class Visual_EngagementTracker(object):
 
 				'''
 
+            # cv2.putText(self.frame, str(self.gaze_ratio), (50,100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255),3)
+            # cv2.putText(self.frame, gaze, (50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255),3)
+            # cv2.putText(frame, str(gaze_ratio_left_eye), (50,150), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255),3)
 
-			
+        # cv2.imshow("Frame", self.frame)
 
-				#cv2.putText(self.frame, str(self.gaze_ratio), (50,100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255),3)				
-				#cv2.putText(self.frame, gaze, (50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255),3)
-				#cv2.putText(frame, str(gaze_ratio_left_eye), (50,150), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255),3)
+        # key = cv2.waitKey(1)
 
+        # if key == 27:
 
-			
-			#cv2.imshow("Frame", self.frame)
+        # break
 
-			#key = cv2.waitKey(1)
+        self.cap.release()
 
-			#if key == 27:
+    # cv2.destroyAllWindows()
 
-				#break
+    def set_thresholds(self, ey=None, hp=None):
 
+        self.ey = ey
 
-		self.cap.release()
-		#cv2.destroyAllWindows()
+        self.hp = hp
 
+    def comparison(self):
 
-	def set_thresholds(self, ey = None, hp = None):
+        # print('In comparison from VE')
+        # print(type(self.ey))
+        # print(type(self.hp))
 
-		self.ey = ey
+        if self.gaze_ratio <= (float(self.ey) - 0.05):
 
-		self.hp = hp
+            self.eye_direction = 'right'
 
+        elif (float(self.ey) - 0.05) < self.gaze_ratio < (float(self.ey) + 0.05):
 
+            self.eye_direction = 'center'
 
-	def comparison(self):
+        else:
 
-		#print('In comparison from VE')
-		#print(type(self.ey))
-		#print(type(self.hp))
+            self.eye_direction = 'left'
 
-		if self.gaze_ratio <= (float(self.ey)-0.05):
+        # gaze = "Looking: "
 
-			self.eye_direction = 'right'
+        if self.angles[1] < float(self.hp) - 5.0:
 
-		elif (float(self.ey)- 0.05) < self.gaze_ratio < (float(self.ey) + 0.05):
+            self.gaze = "Left"
 
-			self.eye_direction ='center'
+        elif self.angles[1] > float(self.hp) + 5.0:
 
-		else:
-			
-			self.eye_direction = 'left'
+            self.gaze = "Right"
 
-		#gaze = "Looking: "
+        else:
 
-		if self.angles[1] < float(self.hp) - 5.0 :
+            self.gaze = "Forward"
 
-			self.gaze = "Left"
-		
-		elif self.angles[1] > float(self.hp) + 5.0:
+        self.DB.General.SM.loadVisualEngagement(eg=self.gaze_ratio, hp=self.angles[1], tag_eg=self.eye_direction,
+                                                tag_hp=self.gaze)
 
-			self.gaze = "Right"
+    # print('Eye direction', self.eye_direction)
+    # print('Head Pose', self.gaze)
 
-		else:
-			
-			self.gaze = "Forward"
+    def start(self):
 
+        self.go_on = True
 
-		self.DB.General.SM.loadVisualEngagement(eg = self.gaze_ratio, hp = self.angles[1], tag_eg= self.eye_direction, tag_hp = self.gaze)
+    def pause(self):
 
-		#print('Eye direction', self.eye_direction)
-		#print('Head Pose', self.gaze)
+        self.go_on = False
 
+    def getData(self):
 
+        return [self.gaze, self.eye_direction]
 
-		
+    def get_calibration(self):
 
-	def start(self):
+        return [self.gaze_ratio, self.angles[1]]
 
-		self.go_on = True
+    def camera_matrix(self, fl, center):
 
+        mat = [[fl, 1, center[0]],
+               [0, fl, center[1]],
+               [0, 0, 1]]
 
-	def pause(self):
+        return np.array(mat, dtype=np.float)
 
-		self.go_on = False
+    def reference_3Dmodel(self):
 
+        model = [[0.0, 0.0, 0.0],
+                 [0.0, -330.0, -65.0],
+                 [-225.0, 170.0, -135.0],
+                 [225.0, 170.0, -135.0],
+                 [-150.0, -150.0, -125.0],
+                 [150.0, -150.0, -125.0]]
 
-	def getData(self):
+        m = np.array(model, dtype=np.float64)
+        return m
 
-		return [self.gaze, self.eye_direction]
+    def launch_thread(self):
 
+        self.t = threading.Thread(target=self.process)
+        self.t.start()
 
-	def get_calibration(self):
+    def reference_2Dmodel(self, landmarks):
 
-		return [self.gaze_ratio, self.angles[1]]
+        points = [[landmarks.part(30).x, landmarks.part(30).y],
+                  [landmarks.part(8).x, landmarks.part(8).y],
+                  [landmarks.part(36).x, landmarks.part(36).y],
+                  [landmarks.part(45).x, landmarks.part(45).y],
+                  [landmarks.part(48).x, landmarks.part(48).y],
+                  [landmarks.part(54).x, landmarks.part(54).y]]
 
+        return np.array(points, dtype=np.float64)
 
-	def camera_matrix(self, fl, center):
-
-		mat = [[fl, 1, center[0]],
-				[0, fl, center[1]],
-				[0, 0, 1]]
-
-		return np.array(mat, dtype=np.float)
-
-	def reference_3Dmodel(self):
-
-		model = [[0.0, 0.0, 0.0],
-				[0.0, -330.0, -65.0],
-				[-225.0, 170.0, -135.0],
-				[225.0, 170.0, -135.0],
-				[-150.0, -150.0, -125.0],
-				[150.0, -150.0, -125.0]]
-
-		m = np.array(model, dtype = np.float64)
-		return m
-
-
-	def launch_thread(self ):
-
-		self.t = threading.Thread(target = self.process)
-		self.t.start()
-
-	def reference_2Dmodel(self, landmarks):
-
-		points = [[landmarks.part(30).x, landmarks.part(30).y],
-					[landmarks.part(8).x, landmarks.part(8).y],
-					[landmarks.part(36).x, landmarks.part(36).y],
-					[landmarks.part(45).x, landmarks.part(45).y],
-					[landmarks.part(48).x, landmarks.part(48).y],
-					[landmarks.part(54).x, landmarks.part(54).y]]
-
-		return np.array(points, dtype = np.float64)
-
-
-'''
 
 def main():
+    a = Visual_EngagementTracker(DataHandler=None, window='Therapy')
+    a.start()
+    a.launch_thread()
+    time.sleep(60)
 
-	a = Visual_EngagementTracker(DataHandler = None, window = 'Therapy')
-	a.start()
-	a.launch_thread()
-	time.sleep(60)
+    for x in range(500):
+        data = a.get_calibration()
+        print('data', data)
+        time.sleep(1)
 
-	for x in range(500):
-
-		data = a.get_calibration()
-		print('data', data)
-		time.sleep(1)
+    a.pause()
 
 
-	a.pause()
-
-A = main()
-
-'''
+if __name__ == "__main__":
+    main()
