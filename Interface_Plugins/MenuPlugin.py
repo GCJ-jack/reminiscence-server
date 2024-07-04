@@ -29,3 +29,4 @@ class MenuPlugin(object):
 
     def onReminiscence(self):
         pass
+
