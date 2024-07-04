@@ -422,6 +422,7 @@ def main():
     app = QtWidgets.QApplication(sys.argv)
     image_path = "/Users/guochaojun/Desktop/ReminiscenceSAR_副本/output1.jpg"  # 替换为你实际的图片路径
     GUI = ReminiscenceWindow(settings=image_path)
+    GUI.show()
     sys.exit(app.exec_())
 
 
