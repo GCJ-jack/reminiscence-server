@@ -235,7 +235,9 @@ class Visual_EngagementTracker(object):
         self.hp = hp
 
     def comparison(self):
-
+        if self.DB is None:
+            print("Warning: DataHandler is not initialized.")
+            return
         # print('In comparison from VE')
         # print(type(self.ey))
         # print(type(self.hp))
@@ -294,7 +296,7 @@ class Visual_EngagementTracker(object):
                [0, fl, center[1]],
                [0, 0, 1]]
 
-        return np.array(mat, dtype=np.float)
+        return np.array(mat, dtype=np.float64)
 
     def reference_3Dmodel(self):
 
@@ -325,19 +327,19 @@ class Visual_EngagementTracker(object):
         return np.array(points, dtype=np.float64)
 
 
-def main():
-    a = Visual_EngagementTracker(DataHandler=None, window='Therapy')
-    a.start()
-    a.launch_thread()
-    time.sleep(60)
+# def main():
+#     a = Visual_EngagementTracker(DataHandler=None, window='Therapy')
+#     a.start()
+#     a.launch_thread()
+#     try:
+#         time.sleep(60)
+#         for x in range(500):
+#             data = a.get_calibration()
+#             print('data', data)
+#             time.sleep(1)
+#     finally:
+#         a.pause()
 
-    for x in range(500):
-        data = a.get_calibration()
-        print('data', data)
-        time.sleep(1)
 
-    a.pause()
-
-
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

@@ -102,22 +102,42 @@ class LowerLevel(object):
         return data
 
 
-def main():
-    ll = LowerLevel(Datahandler=None)
-    ll.set_path(path={'path1': 'Workspace_Understanding/Images/Photo.jpeg',
-                      'path2': 'Workspace_Understanding/Images/rueieiye.jpeg'})
-    ll.set_modules(work=True, sound=True)
-    ll.launch_wsmodule()
-    m = ll.get_data(n=2)
-    print('Data from LowerLevel', m)
-    time.sleep(1)
-    ll.launch_sensors()
-    time.sleep(2)
-    for i in range(10):
-        ll.update_data()
-        time.sleep(0.01)
-        ll.print_data()
-    ll.close_sensors()
+# def main():
+#     ll = LowerLevel(Datahandler=None)
+#     ll.set_path(path={'path1': 'Workspace_Understanding/Images/Photo.jpeg',
+#                       'path2': 'Workspace_Understanding/Images/rueieiye.jpeg'})
+#     ll.set_modules(work=True, sound=True)
+#     # ll.launch_wsmodule()
+#     # m = ll.get_data(n=2)
+#     # print('Data from LowerLevel', m)
+#     time.sleep(1)
+#     ll.launch_sensors()
+#     time.sleep(2)
+#     for i in range(10):
+#         ll.update_data()
+#         time.sleep(0.01)
+#         ll.print_data()
+#     ll.close_sensors()
 
 
-main()
+# main()
+
+# def main():
+
+# 	ll = LowerLevel(Datahandler = None)
+# 	ll.set_path(path = {'path1': r'Interface_Plugins\Lower_layer\Workspace_Understanding\Images\0.jpeg',
+# 						'path2': r'Interface_Plugins\Lower_layer\Workspace_Understanding\Images\Street1.jpg'})
+# 	ll.set_modules(work = True, sound = True)
+# 	ll.launch_wsmodule()
+# 	m = ll.get_data(n = 2)
+# 	print('Data from LowerLevel',m)
+# 	time.sleep(1)
+# 	ll.launch_sensors()
+# 	time.sleep(2)
+# 	for i in range(10):
+# 		ll.update_sounddata()
+# 		time.sleep(0.01)
+# 		ll.print_data()
+# 	ll.close_sensors()
+
+# A = main()

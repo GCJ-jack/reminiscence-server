@@ -271,11 +271,12 @@ class CalibrationWindow(QtWidgets.QMainWindow):
         self.gxlabels["calibration_blue"].show()
 
 
-def main():
-    app = QtWidgets.QApplication(sys.argv)
-    GUI = CalibrationWindow()
-    GUI.show()
-    sys.exit(app.exec_())
+# def main():
+#     app = QtWidgets.QApplication(sys.argv)
+#     GUI = CalibrationWindow()
+#     GUI.show()
+#     sys.exit(app.exec_())
 
 
-main()
+# if __name__ == '__main__':
+#     main()

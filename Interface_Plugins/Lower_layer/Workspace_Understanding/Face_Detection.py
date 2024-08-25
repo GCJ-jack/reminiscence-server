@@ -7,7 +7,7 @@ class WS_Understanding(object):
 
     def __init__(self):
         # Loading paths from photos
-        self.photoPath = "Images/Photo_2.jpeg"
+        self.photoPath = "Images/0.jpeg"
         self.cascPath = "haarcascades/haarcascade_frontalface_default.xml"
 
     def Create_Cascade(self):

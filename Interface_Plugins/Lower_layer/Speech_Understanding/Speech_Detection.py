@@ -13,6 +13,7 @@ import collections
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 class SoundDetection:
@@ -183,7 +184,7 @@ class SoundDetection:
         self.voice_acd = np.array(self.voice_activity)
         pd.DataFrame(self.voice_acd).to_csv(os.path.join(path, self.vad_excel))
 
-    def get_data(self):
+    def getData(self):
         [change, voice_act, voice_deac] = self.test(self.active)
         return [self.active, self.change]
 
@@ -202,7 +203,7 @@ class SoundDetection:
 #     time.sleep(2)
 #     for x in range(500):
 #         voice = sound.get_voice()
-#         data = sound.get_data()
+#         data = sound.getData()
 #         plt.scatter(x, data[0])
 #         plt.pause(0.01)
 #         time.sleep(0.01)
@@ -211,6 +212,6 @@ class SoundDetection:
 #     sound.close()
 #     sound.write_audio(
 #         path='C:/Users/Nathalia Cespedes/Desktop/Reminiscence_Interface_Robot/Interface_Plugins/Lower_layer/Speech_Understanding')
-#
-#
+
+
 # main()

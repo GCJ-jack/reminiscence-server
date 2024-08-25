@@ -275,6 +275,7 @@ class ReminiscenceWindow(QtWidgets.QMainWindow):
 
         print(self.path)
         self.photos = os.listdir(self.path)
+        
         size = (1280, 962)
 
         img = cv2.imread(self.path + "/" + self.photos[0])
@@ -408,9 +409,9 @@ class ReminiscenceWindow(QtWidgets.QMainWindow):
         print('Printing N from icon option', n)
 
         if n == 1:
-            icon = QtGui.QPixmap('C:/Users/natha/Desktop/ReminiscenceSAR/output1.jpg')
+            icon = QtGui.QPixmap('output1.jpg')
         elif n == 2:
-            icon = QtGui.QPixmap('C:/Users/natha/Desktop/ReminiscenceSAR/output2.jpg')
+            icon = QtGui.QPixmap('output2.jpg')
 
         icon = icon.scaled(int(self.winsize_h * 0.6), int(self.winsize_v * 0.6), QtCore.Qt.KeepAspectRatio,
                            transformMode=QtCore.Qt.SmoothTransformation)
@@ -418,13 +419,15 @@ class ReminiscenceWindow(QtWidgets.QMainWindow):
         self.gxlabels["photomain"].show()
 
 
-def main():
-    app = QtWidgets.QApplication(sys.argv)
-    image_path = "/Users/guochaojun/Desktop/ReminiscenceSAR_副本/output1.jpg"  # 替换为你实际的图片路径
-    GUI = ReminiscenceWindow(settings=image_path)
-    GUI.show()
-    sys.exit(app.exec_())
+# def main():
+#     app = QtWidgets.QApplication(sys.argv)
+#     current_dir = os.path.dirname(os.path.abspath(__file__))
+#     project_root = os.path.dirname(current_dir)
+#     image_path = os.path.join(project_root, "output1.jpg")
+#     GUI = ReminiscenceWindow(settings=image_path)
+#     GUI.show()
+#     sys.exit(app.exec_())
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

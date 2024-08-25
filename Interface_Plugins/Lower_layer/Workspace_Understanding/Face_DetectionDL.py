@@ -14,7 +14,7 @@ class Face_Detection(object):
 	"""docstring for ClassName"""
 	def __init__(self):
 
-		self.photoPath = "Images/Photo_1.jpeg"
+		self.photoPath = "Images/00.jpeg"
 		self.pixels = pyplot.imread(self.photoPath)
 		print(self.pixels)
 		

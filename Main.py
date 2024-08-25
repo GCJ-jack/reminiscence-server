@@ -1,7 +1,7 @@
 import os, sys
 
 ab_path = os.path.abspath(os.path.join(os.path.dirname(__file__)))
-# print(ab_path)
+print(ab_path)
 sys.path.append(ab_path)
 import threading
 # import GUI elements
@@ -14,6 +14,8 @@ import Interface_Plugins.TherapyPlugin as TherapyPlugin
 import Interface_Plugins.MenuPlugin as MenuPlugin
 import Interface_Plugins.RegisterPlugin as RegisterPlugin
 import Interface_Plugins.CalibrationPlugin as CalibrationPlugin
+import socket
+import json
 
 from PyQt5 import QtGui, QtCore, QtWidgets
 
@@ -23,6 +25,8 @@ import time
 import sys
 import os
 
+current_path = "Interface_Plugins/Upper_layer"
+
 
 class MainController(object):
 
@@ -30,6 +34,8 @@ class MainController(object):
         # Running file path
         self.dir = os.getcwd()
         print(self.dir)
+
+
         # Reminiscence Images Path
         self.imgDir = self.dir + '/' + 'Interface_Plugins' + '/' + 'Lower_layer' + '/' + 'Workspace_Understanding' + '/' + 'Images'
         self.database_path = self.dir + '/' + 'db' + '/' + 'general'
@@ -48,13 +54,17 @@ class MainController(object):
 
         # loading interface plugins
 
+        
+        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.client_socket.connect(('192.168.1.179', 65432))
+
         self.MenuPlugin = MenuPlugin.MenuPlugin()
 
-        self.RegisterPlugin = RegisterPlugin.RegisterPlugin(DataHandler=db)
+        self.RegisterPlugin = RegisterPlugin.RegisterPlugin(DataHandler=db,client_socket=self.client_socket)
 
-        self.TherapyPlugin = TherapyPlugin.TherapyPlugin(settings=self.imgDir, DataHandler=db, path=ab_path)
+        self.TherapyPlugin = TherapyPlugin.TherapyPlugin(settings=self.imgDir, DataHandler=db, path=ab_path, client_socket=self.client_socket)
 
-        self.CalibrationPlugin = CalibrationPlugin.CalibrationPlugin(DataHandler=db)
+        self.CalibrationPlugin = CalibrationPlugin.CalibrationPlugin(DataHandler=db, client_socket=self.client_socket)
 
         self.set_signals()
 
@@ -85,7 +95,7 @@ class MainController(object):
 
         self.CalibrationWindow.reminiscenceButton(self.onLaunch_Therapy)
         self.CalibrationWindow.calibration(self.calibration)
-        self.CalibrationWindow.onCalibration_end.connect(self.CalibrationWindow.calibration_charging)
+        self.CalibrationWindow.onCalibration_end.connect(lambda: self.CalibrationWindow.calibration_charging(current_path))
 
     def calibration(self):
         self.CalibrationPlugin.calibration()
@@ -103,14 +113,15 @@ class MainController(object):
 
         self.TherapyPlugin.launch_view()
 
+
     # pass
 
 
 def main():
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     menu = MainController()
 
     sys.exit(app.exec_())
 
 
-main()
+a = main()

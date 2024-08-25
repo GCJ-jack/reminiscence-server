@@ -12,7 +12,6 @@ import Object_DetectionPy27 as Object
 class WorkspaceManager(object):
     def __init__(self, imgpath=None):
         # Extract Image path to pass both objects
-        self.properties = None
         self.impath = imgpath['path1']
         self.impath1 = imgpath['path2']
 
@@ -44,52 +43,51 @@ class WorkspaceManager(object):
         # Object Detection - Second Image
 
         # People Animals - Who topic
-        persons = self.data['Objects'].count('person')
-        dog = self.data['Objects'].count('dog')
-        cat = self.data['Objects'].count('cat')
-        bird = self.data['Objects'].count('bird')
+        persons = sum(1 for obj in self.data['Objects'] if 'person' in obj.lower())
+        dog = sum(1 for obj in self.data['Objects'] if 'dog' in obj.lower())
+        cat = sum(1 for obj in self.data['Objects'] if 'cat' in obj.lower())
+        bird = sum(1 for obj in self.data['Objects'] if 'bird' in obj.lower())
 
         # Kitchen - Where Topic
-        wine_glass = self.data['Objects'].count('wine glass')
-        fork = self.data['Objects'].count('fork')
-        spoon = self.data['Objects'].count('spoon')
-        knife = self.data['Objects'].count('knife')
-        plate = self.data['Objects'].count('plate')
-        cup = self.data['Objects'].count('cup')
-        oven = self.data['Objects'].count('oven')
+        wine_glass = sum(1 for obj in self.data['Objects'] if 'wine glass' in obj.lower())
+        fork = sum(1 for obj in self.data['Objects'] if 'fork' in obj.lower())
+        spoon = sum(1 for obj in self.data['Objects'] if 'spoon' in obj.lower())
+        knife = sum(1 for obj in self.data['Objects'] if 'knife' in obj.lower())
+        plate = sum(1 for obj in self.data['Objects'] if 'plate' in obj.lower())
+        cup = sum(1 for obj in self.data['Objects'] if 'cup' in obj.lower())
+        oven = sum(1 for obj in self.data['Objects'] if 'oven' in obj.lower())
 
         # Dinner Place - Where Topic
-        dining_table = self.data['Objects'].count('dining table')
+        dining_table = sum(1 for obj in self.data['Objects'] if 'dining table' in obj.lower())
 
-        # Street - Where topic
-        car = self.data['Objects'].count('car')
-        bus = self.data['Objects'].count('bus')
-        motorcycle = self.data['Objects'].count('motorcycle')
-        traffic_light = self.data['Objects'].count('traffic light')
-        stop_sign = self.data['Objects'].count('stop sign')
-        street_sign = self.data['Objects'].count('street sign')
+        # Street - Where Topic
+        car = sum(1 for obj in self.data['Objects'] if 'car' in obj.lower())
+        bus = sum(1 for obj in self.data['Objects'] if 'bus' in obj.lower())
+        motorcycle = sum(1 for obj in self.data['Objects'] if 'motorcycle' in obj.lower())
+        traffic_light = sum(1 for obj in self.data['Objects'] if 'traffic light' in obj.lower())
+        stop_sign = sum(1 for obj in self.data['Objects'] if 'stop sign' in obj.lower())
+        street_sign = sum(1 for obj in self.data['Objects'] if 'street sign' in obj.lower())
 
-        # Birthday - When topic
-        cake = self.data['Objects'].count('cake')
+        # Birthday - When Topic
+        cake = sum(1 for obj in self.data['Objects'] if 'cake' in obj.lower())
 
-        # Library - Where topic
-        book = self.data['Objects'].count('book')
+        # Library - Where Topic
+        book = sum(1 for obj in self.data['Objects'] if 'book' in obj.lower())
 
-        # Indoor objects - Where topic
-        door = self.data['Objects'].count('door')
-        remote = self.data['Objects'].count('remote')
-        tv = self.data['Objects'].count('tv')
-        bed = self.data['Objects'].count('bed')
+        # Indoor Objects - Where Topic
+        door = sum(1 for obj in self.data['Objects'] if 'door' in obj.lower())
+        remote = sum(1 for obj in self.data['Objects'] if 'remote' in obj.lower())
+        tv = sum(1 for obj in self.data['Objects'] if 'tv' in obj.lower())
+        bed = sum(1 for obj in self.data['Objects'] if 'bed' in obj.lower())
 
-        # Other topics
-        # Weather
-        umbrella = self.data['Objects'].count('umbrella')
+        # Weather - Other Topics
+        umbrella = sum(1 for obj in self.data['Objects'] if 'umbrella' in obj.lower())
 
-        # Sports
-        snowboards = self.data['Objects'].count('snowboard')
-        baseball_bat = self.data['Objects'].count('baseball bat')
-        skateboard = self.data['Objects'].count('skateboard')
-        tennis = self.data['Objects'].count('tennis racket')
+        # Sports - Other Topics
+        snowboards = sum(1 for obj in self.data['Objects'] if 'snowboard' in obj.lower())
+        baseball_bat = sum(1 for obj in self.data['Objects'] if 'baseball bat' in obj.lower())
+        skateboard = sum(1 for obj in self.data['Objects'] if 'skateboard' in obj.lower())
+        tennis = sum(1 for obj in self.data['Objects'] if 'tennis racket' in obj.lower())
 
         self.image_context = {'Who': {'persons': persons, 'cat': cat, 'dog': dog, 'bird': bird},
                               'Kitchen': {'wine_glass': wine_glass, 'fork': fork, 'spoon': spoon, 'knife': knife,
@@ -109,53 +107,53 @@ class WorkspaceManager(object):
         # Object Detection - Second Image
 
         # People Animals - Who topic
-        persons1 = self.data['Objects1'].count('person')
-        dog1 = self.data['Objects1'].count('dog')
-        cat1 = self.data['Objects1'].count('cat')
-        bird1 = self.data['Objects1'].count('bird')
+        # persons1 = self.data['Objects1'].count('person')
+        persons1 = sum(1 for obj in self.data['Objects1'] if 'person' in obj.lower())
+        # dog1 = self.data['Objects1'].count('dog')
+        dog1 = sum(1 for obj in self.data['Objects1'] if 'dog' in obj.lower())
+        cat1 = sum(1 for obj in self.data['Objects1'] if 'cat' in obj.lower())
+        bird1 = sum(1 for obj in self.data['Objects1'] if 'bird' in obj.lower())
 
         # Kitchen - Where Topic
-        wine_glass1 = self.data['Objects1'].count('wine glass')
-        fork1 = self.data['Objects1'].count('fork')
-        spoon1 = self.data['Objects1'].count('spoon')
-        knife1 = self.data['Objects1'].count('knife')
-        plate1 = self.data['Objects1'].count('plate')
-        cup1 = self.data['Objects1'].count('cup')
-        oven1 = self.data['Objects1'].count('oven')
+        wine_glass1 = sum(1 for obj in self.data['Objects1'] if 'wine glass' in obj.lower())
+        fork1 = sum(1 for obj in self.data['Objects1'] if 'fork' in obj.lower())
+        spoon1 = sum(1 for obj in self.data['Objects1'] if 'spoon' in obj.lower())
+        knife1 = sum(1 for obj in self.data['Objects1'] if 'knife' in obj.lower())
+        plate1 = sum(1 for obj in self.data['Objects1'] if 'plate' in obj.lower())
+        cup1 = sum(1 for obj in self.data['Objects1'] if 'cup' in obj.lower())
+        oven1 = sum(1 for obj in self.data['Objects1'] if 'oven' in obj.lower())
 
         # Dinner Place - Where Topic
-        dining_table1 = self.data['Objects1'].count('dining table')
+        dining_table1 = sum(1 for obj in self.data['Objects1'] if 'dining table' in obj.lower())
 
-        # Street - Where topic
-        car1 = self.data['Objects1'].count('car')
-        bus1 = self.data['Objects1'].count('bus')
-        motorcycle1 = self.data['Objects1'].count('motorcycle')
-        traffic_light1 = self.data['Objects1'].count('traffic light')
-        stop_sign1 = self.data['Objects1'].count('stop sign')
-        street_sign1 = self.data['Objects1'].count('street sign')
+        # Street - Where Topic
+        car1 = sum(1 for obj in self.data['Objects1'] if 'car' in obj.lower())
+        bus1 = sum(1 for obj in self.data['Objects1'] if 'bus' in obj.lower())
+        motorcycle1 = sum(1 for obj in self.data['Objects1'] if 'motorcycle' in obj.lower())
+        traffic_light1 = sum(1 for obj in self.data['Objects1'] if 'traffic light' in obj.lower())
+        stop_sign1 = sum(1 for obj in self.data['Objects1'] if 'stop sign' in obj.lower())
+        street_sign1 = sum(1 for obj in self.data['Objects1'] if 'street sign' in obj.lower())
 
-        # Birthday - When topic
-        cake1 = self.data['Objects1'].count('cake')
+        # Birthday - When Topic
+        cake1 = sum(1 for obj in self.data['Objects1'] if 'cake' in obj.lower())
 
-        # Library - Where topic
-        book1 = self.data['Objects1'].count('book')
+        # Library - Where Topic
+        book1 = sum(1 for obj in self.data['Objects1'] if 'book' in obj.lower())
 
-        # Indoor objects - Where topic
-        door1 = self.data['Objects1'].count('door')
-        remote1 = self.data['Objects1'].count('remote')
-        tv1 = self.data['Objects1'].count('tv')
-        bed1 = self.data['Objects1'].count('bed')
+        # Indoor Objects - Where Topic
+        door1 = sum(1 for obj in self.data['Objects1'] if 'door' in obj.lower())
+        remote1 = sum(1 for obj in self.data['Objects1'] if 'remote' in obj.lower())
+        tv1 = sum(1 for obj in self.data['Objects1'] if 'tv' in obj.lower())
+        bed1 = sum(1 for obj in self.data['Objects1'] if 'bed' in obj.lower())
 
-        # Other topics
-        # Weather
-        umbrella1 = self.data['Objects1'].count('umbrella')
+        # Weather - Other Topics
+        umbrella1 = sum(1 for obj in self.data['Objects1'] if 'umbrella' in obj.lower())
 
-        # Sports
-        snowboards1 = self.data['Objects1'].count('snowboard')
-        baseball_bat1 = self.data['Objects1'].count('baseball bat')
-        skateboard1 = self.data['Objects1'].count('skateboard')
-        tennis1 = self.data['Objects1'].count('tennis racket')
-
+        # Sports - Other Topics
+        snowboards1 = sum(1 for obj in self.data['Objects1'] if 'snowboard' in obj.lower())
+        baseball_bat1 = sum(1 for obj in self.data['Objects1'] if 'baseball bat' in obj.lower())
+        skateboard1 = sum(1 for obj in self.data['Objects1'] if 'skateboard' in obj.lower())
+        tennis1 = sum(1 for obj in self.data['Objects1'] if 'tennis racket' in obj.lower())
         self.image2_context = {'Who': {'persons': persons1, 'cat': cat1, 'dog': dog1, 'bird': bird1},
                                'Kitchen': {'wine_glass': wine_glass1, 'fork': fork1, 'spoon': spoon1, 'knife': knife1,
                                            'plate': plate1, 'cup': cup1, 'oven': oven1},
@@ -275,23 +273,25 @@ class WorkspaceManager(object):
         self.go_On = False
 
 
-def main():
-    Workspace_manager = WorkspaceManager(imgpath={'path1': 'Workspace_Understanding/Images/Test_photo.jpg',
-                                                  'path2': 'Workspace_Understanding/Images/Photo_90.jpeg'})
-    Workspace_manager.launch_workspace()
-    Workspace_manager.data_extraction()
-    Workspace_manager.dictionary_dataCounts(n=1)
-    n = Workspace_manager.where_abstraction()
-    where = {'Kitchen': n['Kitchen'], 'Dinner_Place': n['Dinner_Place'], 'Street': n['Street'],
-             'Indoor_Space': n['Indoor_space']}
-    whereVal = [word for word, occurrences in where.items() if occurrences > 0]
-    print('Where Val', whereVal)
-    # calculating the maximum value in the dictionary
-    whereMax = max(where.items(), key=operator.itemgetter(1))[0]
-    print('Where Max', whereMax)
+# def main():
+#     Workspace_manager = WorkspaceManager(imgpath={
+#         'path1': r'Interface_Plugins\Lower_layer\Workspace_Understanding\Images\0.jpeg',
+#         'path2': r'Interface_Plugins\Lower_layer\Workspace_Understanding\Images\00.jpeg'
+#     })
+#     Workspace_manager.launch_workspace()
+#     Workspace_manager.data_extraction()
+#     Workspace_manager.dictionary_dataCounts(n=1)
+#     n = Workspace_manager.where_abstraction()
+#     where = {'Kitchen': n['Kitchen'], 'Dinner_Place': n['Dinner_Place'], 'Street': n['Street'],
+#              'Indoor_Space': n['Indoor_space']}
+#     whereVal = [word for word, occurrences in where.items() if occurrences > 0]
+#     print('Where Val', whereVal)
+#     # calculating the maximum value in the dictionary
+#     whereMax = max(where.items(), key=operator.itemgetter(1))[0]
+#     print('Where Max', whereMax)
 
-    Workspace_manager.who_abstraction()
+#     Workspace_manager.who_abstraction()
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

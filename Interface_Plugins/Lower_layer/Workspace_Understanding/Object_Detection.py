@@ -68,25 +68,24 @@ class Object_Detection(object):
 
 
     def getData(self):
-
+        
         return(self.object)
 
 
 
 
-'''
-
-def main():
-
-    Objects = Object_Detection('Images/Photo_1.jpeg')
-    Objects.loading_model()
-    Objects.start()
-    Objects.detection()
-    #m = Objects.getData()
-    #print(m)
 
 
-A = main()
+# def main():
+
+#     Objects = Object_Detection('Images/Photo_1.jpeg')
+#     Objects.loading_model()
+#     Objects.start()
+#     Objects.detection()
+#     m = Objects.getData()
+#     print(m)
 
 
-'''
+# A = main()
+
+

@@ -368,12 +368,12 @@ class RegisterWindow(QtWidgets.QMainWindow):
         self.currdate.setText(today.toString())
 
 
-def main():
-    app = QtWidgets.QApplication(sys.argv)
-    GUI = RegisterWindow()
-    GUI.registerButton(GUI.get_patient_data)
-    GUI.show()
-    sys.exit(app.exec_())
+# def main():
+#     app = QtWidgets.QApplication(sys.argv)
+#     GUI = RegisterWindow()
+#     GUI.registerButton(GUI.get_patient_data)
+#     GUI.show()
+#     sys.exit(app.exec_())
 
 
-main()
+# main()

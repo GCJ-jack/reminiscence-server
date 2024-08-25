@@ -3,12 +3,10 @@ import threading
 import time
 # import GUI library
 from PyQt5 import QtGui, QtCore, QtWidgets
-import Upper_layer.MenuWindow as MenuWindow
+import Interface_Plugins.Upper_layer.MenuWindow as MenuWindow
 
 import time
 import sys
-import numpy as np
-
 
 class MenuPlugin(object):
 

@@ -2,7 +2,6 @@ import os
 import sys
 import platform
 
-import self
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -400,12 +399,12 @@ class MenuWindow(QtWidgets.QMainWindow):
         self.lcd.display(strftime("%H" + ":" + "%M" + ":" + "%S"))
 
 
-def main():
-    app = QtWidgets.QApplication(sys.argv)
-    GUI = MenuWindow()
-    GUI.show()
-    sys.exit(app.exec_())
+# def main():
+#     app = QtWidgets.QApplication(sys.argv)
+#     GUI = MenuWindow()
+#     GUI.show()
+#     sys.exit(app.exec_())
 
 
-if __name__ == "__main__":
-    main()
+
+    # main()
