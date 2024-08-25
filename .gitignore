@@ -1,4 +1,6 @@
  Interface_Plugins/Lower_layer/Workspace_Understanding/Models/resnet50_coco_best_v2.1.0.h5
+db/general/
+Interface_Plugins/Lower_layer/Workspace_Understanding/Images/
 
 *.pyc
 *.csv
