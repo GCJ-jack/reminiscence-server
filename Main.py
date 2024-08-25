@@ -110,7 +110,7 @@ class MainController(object):
 
     def onLaunch_Therapy(self):
         print('onLaunch_Therapy')
-
+        # self.ReminiscenceWindow.show()
         self.TherapyPlugin.launch_view()
 
 
@@ -120,7 +120,6 @@ class MainController(object):
 def main():
     app = QtWidgets.QApplication(sys.argv)
     menu = MainController()
-
     sys.exit(app.exec_())
 
 
