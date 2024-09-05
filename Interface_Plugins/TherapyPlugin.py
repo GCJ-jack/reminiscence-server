@@ -273,8 +273,8 @@ class RobotCaptureThread(QtCore.QThread):
             if self.c == 1:
                 if self.n == 'yes':
                     d = self.interface.Lowerlevel.update_sounddata()
-                    d[1]+= 2
                     self.send_message("set_Dialog", d)
+                    self.interface.DB.General.SM.loadSensor(voice=d)
                     main(self.client_socket, chat_log)
                     topic = self.send_to_server("topic_Status\n")
                     print('Topic flag', topic)
